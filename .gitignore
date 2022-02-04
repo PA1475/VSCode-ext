@@ -1,5 +1,1 @@
 venv/
-.DS_Store
-.ipynb_checkpoints
-eye_tracker.ipynb
-data/eye_tracker/.DS_Store
