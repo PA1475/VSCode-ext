@@ -7,10 +7,12 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
 import dash_bootstrap_components as dbc
+import Sensors.e4 as e4
 
 
 #app = dash.Dash(__name__)
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
 
 def filter_by_date(date, df):
     '''
@@ -64,6 +66,25 @@ def eye_tracking_visualization(date):
                  width=500
     )
     return fig
+
+
+def filter_by_date(date, df):
+    '''
+    input
+      df: dataframe with a column named timeobj, containing datetimeobbjects
+      date: datetime date, can be created, from datetime import date, date(2022, 1, 27) for example
+    output
+      dataframe filtered be the data
+    '''
+    df['date'] = df['timeobj'].apply(lambda x: x.date())
+    df = df[df['date'] == date.date()]
+    return df
+
+
+def e4_bvp_visualization():
+    ''' process e4 data for bvp '''
+    return e4.get_e4_bvp('../data/e4_wristband/session4/BVP.csv')
+
 
 # defining the graph outside the layout for easier read
 graph_card = dbc.Card(
