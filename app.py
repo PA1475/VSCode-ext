@@ -5,6 +5,14 @@ import dash_html_components as html
 import plotly.express as px
 import pandas as pd
 import dash_bootstrap_components as dbc
+import os
+
+def remove_file(filePath):
+    """Removes a file with the given filepath, if it exists"""
+    if os.path.exists(filePath):
+        os.remove(filePath)
+    else:
+        print("Can not delete the file as it doesn't exists")
 
 
 #app = dash.Dash(__name__)
