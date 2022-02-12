@@ -69,23 +69,36 @@ def eye_tracking_visualization(date):
                  animation_frame='time',
                  range_x=[0, 1],
                  range_y=[1, 0],
-                 height=500,
-                 width=500
+                 height=900,
+                 width=1600
     )
     return fig
 
 def eye_tracking_heatmap():
-    df = df.iloc[:,3:7]
+    df = pd.read_csv('data/eye_tracker/result/User 1_all_gaze.csv')
+    data = df
+    rows = df.shape[0]
+    points = (rows//144)*144
+    df = df.iloc[:a,3:7]
     df = df.rename(columns = {'TIME(2022/02/09 15:49:20.545)': 'time'})
     
     x_coordinates = []
     y_coordinates = []
     
+    coordinates = []
     for i in range(df.shape[0]):
-        x_coordinates.append(df.iloc[i,2])
-        y_coordinates.append(df.iloc[i,3])
-    
-    coordinates = [x_coordinates, y_coordinates] #Måste göras om till en 16x9-matris (är nu typ 7000x2)
+        x_and_y = []
+        x_and_y.append(df.iloc[i,2])
+        x_and_y.append(df.iloc[i,3])
+        coordinates.append(x_and_y)
+    coordinates
+
+    a = coordinates
+
+    ar = np.array(a)                  # Convert list to numpy array
+    res = np.zeros((900,900*(16/9)), dtype=int)  # Create, the result array; initialize with 0
+    res[ar[:,0], ar[:,1]] = 1         # Use ar as a source of indices, to assign 1
+    print (res)
 
     plt.imshow(coordinates, cmap='hot', interpolation='nearest')
     plt.show()
@@ -121,3 +134,6 @@ def update_func(date):
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
+
+# export FLASK_APP=app
+# flask run
