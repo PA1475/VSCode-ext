@@ -12,8 +12,8 @@ class EyeTracker():
 
     def fig(self, date, time_range=[0, 24]):
         ''' produce a plotply figure with a selected timeframe '''
-        self._df = filter_by_date(self._df, date, time_range)
-        fig = px.scatter(self._df,
+        df = filter_by_date(self._df, date, time_range)
+        fig = px.scatter(df,
                      x='FPOGX',
                      y='FPOGY',
                      animation_frame='time',
@@ -30,7 +30,7 @@ class EyeTracker():
             if '.csv' in file:
                 df_temp = pd.read_csv(self._datadir + file)
                 df_temp = self.clean_df(df_temp)
-                df = df.append(df_temp)
+                df = pd.concat([df, df_temp])
         return df
 
     def clean_df(self, df):
