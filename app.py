@@ -103,11 +103,62 @@ def eye_tracking_heatmap():
     plt.imshow(coordinates, cmap='hot', interpolation='nearest')
     plt.show()
 
+def e4_visualization(type_of_data="EDA", session=1):
+    BROWSER_HEIGHT = 500
+    BROWSER_WIDTH = 500
+    # Create correct path
+    path_str = f"data/e4_wristband/session{session}/{type_of_data}.csv"
+    df = pd.read_csv(path_str)
+    # Pandas makes the start time to the column header, only exists one column
+    time_zero_str = df.columns[0]
+    # Rename column header to a more fitting name
+    df = df.rename(columns={time_zero_str : 'data'})
+    time_zero = float(time_zero_str)
+    frequency = df.iloc[0]['data']
+    data_sec = 1/frequency
+    # Remove frequency 
+    df = df.iloc[1:]
+    # Every row multyplied with data_sec gives delta sec, add that to time_zero to get total time
+    df["time"] = [((i+1)*data_sec) for i in range(len(df))]
+    max_time = df["time"].iloc[-1]
+    min_time = 0
+    max_data = df["data"].iloc[-1]
+    min_data = df["data"].iloc[0]
+
+    # Creating figure
+    fig = px.line(df,
+                x = 'time',
+                y = 'data',
+                height=BROWSER_HEIGHT,
+                width=BROWSER_WIDTH
+    )
+    return fig
+
+    
+
 # defining the graph outside the layout for easier read
 graph_card = dbc.Card(
     [
         dcc.Graph(
             id='eye_tracking_visualization')
+    ]
+)
+
+graph_card2 = dbc.Card(
+    [
+        dcc.Graph(
+            id='EDA_Graph',
+            figure=e4_visualization()
+        )
+    ]
+)
+
+graph_card3 = dbc.Card(
+    [
+        dcc.Graph(
+            id='HR_Graph',
+            figure=e4_visualization("HR",2)
+        )
     ]
 )
 
@@ -120,7 +171,11 @@ app.layout = html.Div(
         dcc.DatePickerSingle(id='datepicker', date=date(2022, 1, 27)), 
         html.P('welcome to the most amazing app in the world where you get to know yourself at the deepest levels!'),
         html.P('starting with you eyes'),
-        dbc.Row([graph_card], justify="center")
+        dbc.Row([graph_card], justify="center"),
+        html.P('And now your EDA'),
+        dbc.Row([graph_card2], justify="center"),
+        html.P("Here's your heart rate :)"),
+        dbc.Row([graph_card3], justify="center")
     ], style={'textAlign': 'center'}
 )
 
