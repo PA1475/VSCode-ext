@@ -8,6 +8,7 @@ import plotly.express as px
 import pandas as pd
 import dash_bootstrap_components as dbc
 import os
+import matplotlib.pyplot as plt
 
 def remove_file(filePath):
     """Removes a file with the given filepath, if it exists"""
@@ -72,6 +73,22 @@ def eye_tracking_visualization(date):
                  width=500
     )
     return fig
+
+def eye_tracking_heatmap():
+    df = df.iloc[:,3:7]
+    df = df.rename(columns = {'TIME(2022/02/09 15:49:20.545)': 'time'})
+    
+    x_coordinates = []
+    y_coordinates = []
+    
+    for i in range(df.shape[0]):
+        x_coordinates.append(df.iloc[i,2])
+        y_coordinates.append(df.iloc[i,3])
+    
+    coordinates = [x_coordinates, y_coordinates] #Måste göras om till en 16x9-matris (är nu typ 7000x2)
+
+    plt.imshow(coordinates, cmap='hot', interpolation='nearest')
+    plt.show()
 
 # defining the graph outside the layout for easier read
 graph_card = dbc.Card(
