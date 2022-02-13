@@ -9,15 +9,6 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
 import dash_bootstrap_components as dbc
-import os
-import matplotlib.pyplot as plt
-
-def remove_file(filePath):
-    """Removes a file with the given filepath, if it exists"""
-    if os.path.exists(filePath):
-        os.remove(filePath)
-    else:
-        print("Can not delete the file as it doesn't exists")
 
 
 #app = dash.Dash(__name__)
@@ -71,46 +62,11 @@ def eye_tracking_visualization(date):
                  animation_frame='time',
                  range_x=[0, 1],
                  range_y=[1, 0],
-                 height=900,
-                 width=1600
+                 height=500,
+                 width=500
     )
     return fig
 
-def eye_tracking_heatmap():
-    df = pd.read_csv('data/eye_tracker/result/User 1_all_gaze.csv')
-    data = df
-    rows = df.shape[0]
-    points = (rows//144)*144
-    df = df.iloc[:a,3:7]
-    df = df.rename(columns = {'TIME(2022/02/09 15:49:20.545)': 'time'})
-    
-    x_coordinates = []
-    y_coordinates = []
-    
-    coordinates = []
-    for i in range(df.shape[0]):
-        x_and_y = []
-        x_and_y.append(df.iloc[i,2])
-        x_and_y.append(df.iloc[i,3])
-        coordinates.append(x_and_y)
-    coordinates
-
-    a = coordinates
-
-    ar = np.array(a)                  # Convert list to numpy array
-    res = np.zeros((900,900*(16/9)), dtype=int)  # Create, the result array; initialize with 0
-    res[ar[:,0], ar[:,1]] = 1         # Use ar as a source of indices, to assign 1
-    print (res)
-
-    plt.imshow(coordinates, cmap='hot', interpolation='nearest')
-    plt.show()
-
-def e4_visualization(type_of_data="EDA", session=1):
-    BROWSER_HEIGHT = 500
-    BROWSER_WIDTH = 500
-    # Create correct path
-    path_str = f"data/e4_wristband/session{session}/{type_of_data}.csv"
-    df = pd.read_csv(path_str)
 def e4_get_sessions():
     """ Uses os library to find all directories in e4_wristband directory"""
     PATH_STR = "data/e4_wristband/"
@@ -178,92 +134,8 @@ def e4_LineGraph(type_of_data="EDA", session='session1'):
     )
     return fig
 
-
-def eye_tracking_heatmap():
-    df = df.iloc[:,3:7]
-    df = df.rename(columns = {'TIME(2022/02/09 15:49:20.545)': 'time'})
     
-    x_coordinates = []
-    y_coordinates = []
-    
-    for i in range(df.shape[0]):
-        x_coordinates.append(df.iloc[i,2])
-        y_coordinates.append(df.iloc[i,3])
-    
-    coordinates = [x_coordinates, y_coordinates] #Måste göras om till en 16x9-matris (är nu typ 7000x2)
 
-    plt.imshow(coordinates, cmap='hot', interpolation='nearest')
-    plt.show()
-
-    
-def e4_get_sessions():
-    """ Uses os library to find all directories in e4_wristband directory"""
-    PATH_STR = "data/e4_wristband/"
-    dir_list = os.listdir(PATH_STR)
-    return dir_list
-        
-
-
-def e4_data_cleanup(df, absolute_time=False):
-    """ Function which cleans the dataframe and stores it in a dictionary
-        with other key values                                         """
-
-    data_dict = {}
-    # Pandas makes the start time to the column header, only exists one column
-    time_zero_str = df.columns[0]
-
-    # Rename column header to a more fitting name
-    df = df.rename(columns={time_zero_str : 'data'})
-    data_dict["time_zero"] = float(time_zero_str)
-    
-    # Frequency stored as the first row value
-    frequency = df.iloc[0]['data']
-    data_dict['frequency'] = frequency
-    # Convert to seconds
-    data_sec = 1/frequency
-    # Remove frequency 
-    df = df.iloc[1:]
-    
-    # Treating start time as 0 or the time since 1970s
-    total_time = 0
-    if absolute_time:
-        total_time = data_dict["time_zero"]
-
-    # Every row multyplied with data_sec gives delta sec, add that to time_zero to get total time
-    df["time"] = [((i+1)*data_sec) + total_time for i in range(len(df))]
-    data_dict["df"] = df
-    return data_dict
-
-def e4_LineGraph(type_of_data="EDA", session='session1'):
-    """ Create a displayable figure from csv file, function valid for the
-        following data: [EDA, HR, BVP]                                """
-
-    # Constants for now, if we implement dynamic size of browser
-    BROWSER_HEIGHT = 500
-    BROWSER_WIDTH = 750
-    ACCEPTED_DATA = ["EDA", "HR", "BVP"]
-    # Create correct path
-    path_str = f"data/e4_wristband/{session}/{type_of_data}.csv"
-    try:
-        if (type_of_data not in ACCEPTED_DATA):
-            raise "Wrong format."
-        df = pd.read_csv(path_str)
-    except Exception as e:
-        print("ERROR: Incorrect data type or session.")
-        return None
-    
-    # Get clean dataframe
-    data = e4_data_cleanup(df)
-    # Creating figure
-    fig = px.line(data['df'],
-                x = 'time',
-                y = 'data',
-                height=BROWSER_HEIGHT,
-                width=BROWSER_WIDTH
-    )
-    return fig
-
- 
 # defining the graph outside the layout for easier read
 graph_card = dbc.Card(
     [
@@ -329,6 +201,3 @@ def update_e4_LineGraph(data_type, session):
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
-
-# export FLASK_APP=app
-# flask run
