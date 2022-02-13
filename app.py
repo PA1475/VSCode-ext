@@ -178,7 +178,7 @@ def e4_LineGraph(type_of_data="EDA", session='session1'):
     )
     return fig
 
-    
+
 def eye_tracking_heatmap():
     df = df.iloc[:,3:7]
     df = df.rename(columns = {'TIME(2022/02/09 15:49:20.545)': 'time'})
@@ -195,6 +195,75 @@ def eye_tracking_heatmap():
     plt.imshow(coordinates, cmap='hot', interpolation='nearest')
     plt.show()
 
+    
+def e4_get_sessions():
+    """ Uses os library to find all directories in e4_wristband directory"""
+    PATH_STR = "data/e4_wristband/"
+    dir_list = os.listdir(PATH_STR)
+    return dir_list
+        
+
+
+def e4_data_cleanup(df, absolute_time=False):
+    """ Function which cleans the dataframe and stores it in a dictionary
+        with other key values                                         """
+
+    data_dict = {}
+    # Pandas makes the start time to the column header, only exists one column
+    time_zero_str = df.columns[0]
+
+    # Rename column header to a more fitting name
+    df = df.rename(columns={time_zero_str : 'data'})
+    data_dict["time_zero"] = float(time_zero_str)
+    
+    # Frequency stored as the first row value
+    frequency = df.iloc[0]['data']
+    data_dict['frequency'] = frequency
+    # Convert to seconds
+    data_sec = 1/frequency
+    # Remove frequency 
+    df = df.iloc[1:]
+    
+    # Treating start time as 0 or the time since 1970s
+    total_time = 0
+    if absolute_time:
+        total_time = data_dict["time_zero"]
+
+    # Every row multyplied with data_sec gives delta sec, add that to time_zero to get total time
+    df["time"] = [((i+1)*data_sec) + total_time for i in range(len(df))]
+    data_dict["df"] = df
+    return data_dict
+
+def e4_LineGraph(type_of_data="EDA", session='session1'):
+    """ Create a displayable figure from csv file, function valid for the
+        following data: [EDA, HR, BVP]                                """
+
+    # Constants for now, if we implement dynamic size of browser
+    BROWSER_HEIGHT = 500
+    BROWSER_WIDTH = 750
+    ACCEPTED_DATA = ["EDA", "HR", "BVP"]
+    # Create correct path
+    path_str = f"data/e4_wristband/{session}/{type_of_data}.csv"
+    try:
+        if (type_of_data not in ACCEPTED_DATA):
+            raise "Wrong format."
+        df = pd.read_csv(path_str)
+    except Exception as e:
+        print("ERROR: Incorrect data type or session.")
+        return None
+    
+    # Get clean dataframe
+    data = e4_data_cleanup(df)
+    # Creating figure
+    fig = px.line(data['df'],
+                x = 'time',
+                y = 'data',
+                height=BROWSER_HEIGHT,
+                width=BROWSER_WIDTH
+    )
+    return fig
+
+ 
 # defining the graph outside the layout for easier read
 graph_card = dbc.Card(
     [
