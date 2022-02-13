@@ -8,34 +8,31 @@ Nya features pushas till dev, efter ett scrum möte bestämmer vi vad som ska in
 
 ## Kod
 Redigera inte rader i onödan, detta för att undvika merge konflikter.
-variabel och funktion namngivning: snake_case
-class namngivning: CamelCase
-Vilken kodstil ska vi använda? CamelCase eller snake_case
-2 rader mellan funktioner
-inte för långa rader, 78 karaktärer
 
-dockstring
+- variabel och funktion namngivning: `snake_case`
+- class namngivning: `CamelCase`
+- 2 rader mellan funktioner
+- inte för långa rader, 78 karaktärer
+
+**dockstring**
+```py
+def func(arg1, arg2):
 ''' Beskriv vad functionen returnerar
     args:
-        arg1: beskriv variabeln
-        arg2: beskriv variabeln
-    out:
-        out1: beskriv variabeln som returneras
+        arg1: beskriv parametern
+        arg2: beskriv parametern
 '''
 
+def func():
 ''' vad gör funktionen '''
+```
 ---
 
 ## Scrum
 Möte:
-Måndag 15:00
-Onsdag 15:00
-Fredag 09:00
+- Måndag 15:00
+- Onsdag 15:00
+- Fredag 09:00
 
 Struktur:
-Korta ca 30 min
-Varje person går snabbt igenom vad de gjort, vad de jobbar på och eventuella problem.
-
-Bibilotek
-- plotly
-- dash
+Korta ca 30 min. Varje person går snabbt igenom vad de gjort, vad de jobbar på och eventuella problem.
