@@ -67,31 +67,6 @@ def eye_tracking_visualization(date):
     )
     return fig
 
-def eye_tracking_heatmap():
-    df = pd.read_csv('data/eye_tracker/result/User 1_all_gaze.csv')
-    data = df
-    rows = df.shape[0]
-    points = (rows//144)*144
-    df = df.iloc[:a,3:7]
-    df = df.rename(columns = {'TIME(2022/02/09 15:49:20.545)': 'time'})
-    
-    x_coordinates = []
-    y_coordinates = []
-    
-    coordinates = []
-    for i in range(df.shape[0]):
-        x_and_y = []
-        x_and_y.append(df.iloc[i,2])
-        x_and_y.append(df.iloc[i,3])
-        coordinates.append(x_and_y)
-    coordinates
-
-    a = coordinates
-
-    ar = np.array(a)                  # Convert list to numpy array
-    res = np.zeros((900,900*(16/9)), dtype=int)  # Create, the result array; initialize with 0
-    res[ar[:,0], ar[:,1]] = 1         # Use ar as a source of indices, to assign 1
-
 def e4_get_sessions():
     """ Uses os library to find all directories in e4_wristband directory"""
     PATH_STR = "data/e4_wristband/"
