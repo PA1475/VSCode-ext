@@ -5,6 +5,7 @@ import numpy as np
 
 from datetime import datetime, date, timedelta
 from .utils import filter_by_date
+from .utils import remove_file
 
 class EyeTracker():
     def __init__(self):
@@ -34,6 +35,23 @@ class EyeTracker():
                 df = pd.concat([df, df_temp])
         return df
 
+    def eye_tracker_cleanup(self,filepath):
+        """
+        Makes a new file based on the wanted column of the old file. Removes the old file and returns the file path of the new file.
+        args:
+            filepath: The filepath to the csv file to be cleaned up
+        """
+        try:
+            new_df = pd.read_csv(filepath)
+            new_df = new_df.rename(columns = {new_df.columns[3]: 'time'})
+            new_df = new_df.iloc[0:,3:7]
+            new_file_name = str(os.path.basename(filepath))
+            new_df.to_csv(new_file_name)
+            os.rename(new_file_name,filepath[:-4]+"_clean.csv")
+            remove_file(filepath)
+        except FileNotFoundError:
+            print("File not found with filepath: '" +filepath+"'")  
+    
     def clean_df(self, df):
         ''' cleans the dataframe '''
         def convert_to_dateformat(start, sec):
@@ -44,11 +62,8 @@ class EyeTracker():
         df = df[desired_columns]
         start_time = df.columns[0]
         timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
-        df = df.rename(columns={'TIME(2022/01/27 09:39:32.995)': 'time'})
+        #df = df.rename(columns={'TIME(2022/01/27 09:39:32.995)': 'time'})
         df['timeobj'] = df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
-        
-        # keeps every 40th record in the dataframe
-        df = df[df.index % 40 == 0]
         return df
         
     def heat_map(self, date):
