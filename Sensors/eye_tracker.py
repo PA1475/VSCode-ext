@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import plotly.express as px
+import numpy as np
 
 from datetime import datetime, date, timedelta
 from .utils import filter_by_date
@@ -50,5 +51,27 @@ class EyeTracker():
         df = df[df.index % 40 == 0]
         return df
         
-        
-        
+    def heat_map(self, date):
+        df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
+
+        a = np.zeros((36, 64))
+        x_cords = df['FPOGX'].tolist()
+        y_cords = df['FPOGY'].tolist()
+
+        x_min = min(x_cords)
+        x_max = max(x_cords)
+        y_min = min(y_cords)
+        y_max = max(y_cords)
+
+        for i in range(len(x_cords)):
+            x = int(((x_cords[i]-x_min)/(x_max-x_min))*36)
+            y = int(((y_cords[i]-y_min)/(y_max-y_min))*64)
+
+            a[x-1,y-1] += 1
+
+        print(a)
+
+        fig = px.imshow(a,color_continuous_scale=px.colors.sequential.Plasma,
+                        title="Heatmap of eye tracking data")
+
+        fig.show()
