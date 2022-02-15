@@ -65,9 +65,11 @@ class EyeTracker():
         #df = df.rename(columns={'TIME(2022/01/27 09:39:32.995)': 'time'})
         df['timeobj'] = df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
         return df
-        
-    def heat_map(self, date):
-        df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
+
+    def heat_map(self, date, time_range = [0, 24]):
+        #df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
+        df = filter_by_date(self._df, date, time_range)
+
 
         a = np.zeros((36, 64))
         x_cords = df['FPOGX'].tolist()
@@ -84,9 +86,7 @@ class EyeTracker():
 
             a[x-1,y-1] += 1
 
-        print(a)
-
         fig = px.imshow(a,color_continuous_scale=px.colors.sequential.Plasma,
                         title="Heatmap of eye tracking data")
 
-        fig.show()
+        return fig
