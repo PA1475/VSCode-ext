@@ -10,7 +10,7 @@ class EyeTracker():
         self._datadir = 'data/eye_tracker/'
         self._df = self.accumulate_data()
 
-    def fig(self, date, time_range=[0, 24]):
+    def fig(self, date, time_range=[0, 23]):
         ''' produce a plotply figure with a selected timeframe '''
         df = filter_by_date(self._df, date, time_range)
         fig = px.scatter(df,
@@ -43,7 +43,7 @@ class EyeTracker():
         df = df[desired_columns]
         start_time = df.columns[0]
         timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
-        df = df.rename(columns={'TIME(2022/01/27 09:39:32.995)': 'time'})
+        df = df.rename(columns={start_time: 'time'})
         df['timeobj'] = df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
         
         # keeps every 40th record in the dataframe
