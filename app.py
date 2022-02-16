@@ -12,39 +12,11 @@ from Sensors.eye_tracker import EyeTracker
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-<<<<<<< HEAD
-def eye_tracking_visualization():
-    ''' process data and creating a figure '''
-    eyedata = 'data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv'
-    df = pd.read_csv(eyedata)
-    df = df[['TIME(2022/02/09 15:49:20.545)', 'TIMETICK(f=10000000)', 'FPOGX', 'FPOGY']]
-    df = df.rename(columns={'TIME(2022/02/09 15:49:20.545)': 'time'})
-    test_df = df.iloc[:20]
-    diff = []
-    curr = test_df['time'][0]
-    for time in test_df['time'][1:]:
-        diff.append(time - curr)
-        curr = time
-    time_between_records = np.array(diff).mean()
-    df = df[df.index % 40 == 0]
-    # Change width and height to match screen size, or create variable for aspect ratio
-    fig = px.scatter(df,
-                 x='FPOGX',
-                 y='FPOGY',
-                 animation_frame='time',
-                 range_x=[0, 1],
-                 range_y=[1, 0],
-                 height=500,
-                 width=500
-    )
-    return fig
-=======
 eye_tracker = EyeTracker()
 
 def e4_bvp_visualization():
     ''' process e4 data for bvp '''
     return e4.get_e4_bvp('../data/e4_wristband/session4/BVP.csv')
->>>>>>> eb5f8c7537ab6879a4e589240188621dfc89a0fe
 
 # defining the graph outside the layout for easier read
 graph_card = dbc.Card(
