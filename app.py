@@ -172,7 +172,7 @@ def update_func(date, time_range):
     [Input('data_type_DD', 'value'),
      Input('session_DD'  , 'value')])
 def update_e4_LineGraph(data_type, session):
-    return e4_LineGraph(data_type, session)
+    return e4.fig(data_type, session)
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
