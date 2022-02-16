@@ -10,7 +10,7 @@ class EyeTracker():
         self._datadir = 'data/eye_tracker/'
         self._df = self.accumulate_data()
 
-    def fig(self, date, time_range=[0, 24]):
+    def fig(self, date, time_range=[0, 23]):
         ''' produce a plotply figure with a selected timeframe '''
         df = filter_by_date(self._df, date, time_range)
         fig = px.scatter(df,

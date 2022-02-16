@@ -26,6 +26,23 @@ graph_card = dbc.Card(
     ]
 )
 
+range_slider = dcc.RangeSlider(0, 24, id='range_slider', value=[0, 23], step=0.2, marks={
+        0: '00:00',
+        2: '02:00',
+        4: '04:00',
+        6: '06:00',
+        8: '08:00',
+        10: '10:00',
+        12: '12:00',
+        14: '14:00',
+        16: '16:00',
+        18: '18:00',
+        20: '20:00',
+        22: '22:00',
+    }
+            
+)
+
 
 # the layout
 app.layout = html.Div(
@@ -33,6 +50,7 @@ app.layout = html.Div(
         html.H1(children='Emotion Aware Dashboard'),
         html.Hr(),
         dcc.DatePickerSingle(id='datepicker', date=date(2022, 1, 27)), 
+        range_slider,
         html.P('welcome to the most amazing app in the world where you get to know yourself at the deepest levels!'),
         html.P('starting with you eyes'),
         dbc.Row([graph_card], justify="center")
@@ -42,10 +60,11 @@ app.layout = html.Div(
 
 @app.callback(
         Output('eye_tracking_visualization', 'figure'),
-        Input('datepicker', 'date'))
-def update_func(date):
+        Input('datepicker', 'date'),
+        Input('range_slider', 'value'))
+def update_func(date, time_range):
     date = datetime.strptime(date, '%Y-%m-%d').date()
-    return eye_tracker.fig(date)
+    return eye_tracker.fig(date, time_range)
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
