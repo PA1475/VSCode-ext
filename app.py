@@ -26,7 +26,7 @@ graph_card = dbc.Card(
     ]
 )
 
-range_slider = dcc.RangeSlider(0, 24, id='range_slider', value=[0, 24], step=0.2, marks={
+range_slider = dcc.RangeSlider(0, 24, id='range_slider', value=[0, 23], step=0.2, marks={
         0: '00:00',
         2: '02:00',
         4: '04:00',
@@ -39,7 +39,6 @@ range_slider = dcc.RangeSlider(0, 24, id='range_slider', value=[0, 24], step=0.2
         18: '18:00',
         20: '20:00',
         22: '22:00',
-        24: '24:00',
     }
             
 )
