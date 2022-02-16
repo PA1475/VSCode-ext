@@ -12,10 +12,10 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 def eye_tracking_visualization():
     ''' process data and creating a figure '''
-    eyedata = 'data/eye_tracker/result/User 1_all_gaze.csv'
+    eyedata = 'data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv'
     df = pd.read_csv(eyedata)
-    df = df[['TIME(2022/01/27 09:39:32.995)', 'TIMETICK(f=10000000)', 'FPOGX', 'FPOGY']]
-    df = df.rename(columns={'TIME(2022/01/27 09:39:32.995)': 'time'})
+    df = df[['TIME(2022/02/09 15:49:20.545)', 'TIMETICK(f=10000000)', 'FPOGX', 'FPOGY']]
+    df = df.rename(columns={'TIME(2022/02/09 15:49:20.545)': 'time'})
     test_df = df.iloc[:20]
     diff = []
     curr = test_df['time'][0]
