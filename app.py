@@ -11,6 +11,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 import Sensors.e4 as e4
 from Sensors.eye_tracker import EyeTracker
+from Sensors.e4 import E4Wristband
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -107,6 +108,7 @@ graph_card2 = dbc.Card(
 )
 
 e4_sessions = e4_get_sessions()
+E4Wristband()
 
 # the layout
 app.layout = html.Div(
@@ -137,6 +139,7 @@ app.layout = html.Div(
         dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center")
     ], style={'textAlign': 'center'}
 )
+
 
 @app.callback(
         Output('eye_tracking_visualization', 'figure'),
