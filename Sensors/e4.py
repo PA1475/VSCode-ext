@@ -37,7 +37,4 @@ def _clean_df(df):
     df["time"] = [_u_to_d((i)+time_zero) for i in range(len(df["data"]))]
     return df
 
-df = pd.read_csv("data/e4_wristband/session1/EDA.csv")
-print(_clean_df(df))
-
 
