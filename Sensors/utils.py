@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import date
+import os
 
 # TODO: filter by time, default is the whole day
 
@@ -13,3 +14,13 @@ def filter_by_date(df, date, time=[0, 24]):
     df['date'] = df['timeobj'].apply(lambda x: x.date())
     df = df[df['date'] == date]
     return df
+
+def remove_file(filepath):
+    """Removes a file with the given filepath, if it exists
+    args:
+        filepath: path to the file to be removed
+    """
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    else:
+        print("Can not delete the file as it doesn't exists")

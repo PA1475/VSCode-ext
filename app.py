@@ -106,6 +106,12 @@ graph_card2 = dbc.Card(
     ]
 )
 
+graph_card3 = dbc.Card(
+    [
+        dcc.Graph(id='Eye tracker heatmap')
+    ]
+)
+
 e4_sessions = e4_get_sessions()
 
 # the layout
