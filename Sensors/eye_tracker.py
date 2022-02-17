@@ -43,7 +43,7 @@ class EyeTracker():
         df = df[desired_columns]
         start_time = df.columns[0]
         timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
-        df = df.rename(columns={df.columns.values[0]: 'time'})
+        df = df.rename(columns={start_time: 'time'})
         df['timeobj'] = df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
         
         # keeps every 40th record in the dataframe
