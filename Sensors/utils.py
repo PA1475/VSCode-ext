@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def filter_by_date(df, date, time=[0, 23]):
     '''Returs a dataframe filtered by date and time
@@ -20,3 +20,22 @@ def filter_by_date(df, date, time=[0, 23]):
     df = df[df['timeobj'] < end]
     
     return df
+
+def daylight_saving(dt):
+    """Returns a datetime object, unchanged from output if 
+       datetime does not apply
+    args:
+        dt: datetime object containing the time to be checked
+    """
+    # Hardcoded for this year only (2022)
+    # Problem if user creates file at 01:59 and keeps recording,
+    # it is a edgecase which is unlikely to happen :)
+    THIS_YEAR = datetime.today().year
+    DAYLIGHT_START = datetime(THIS_YEAR, 3, 27, 2)
+    DAYLIGHT_END   = datetime(THIS_YEAR, 10, 30, 3)
+
+    if (DAYLIGHT_START <= dt and dt <= DAYLIGHT_END):
+        dt += timedelta(hours=1)
+
+    return dt
+    
