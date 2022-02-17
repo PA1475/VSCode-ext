@@ -9,12 +9,13 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
 import dash_bootstrap_components as dbc
-import Sensors.e4 as e4
+from Sensors.e4 import E4Wristband
 from Sensors.eye_tracker import EyeTracker
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 eye_tracker = EyeTracker()
+e4 = E4Wristband()
 
 def e4_bvp_visualization():
     ''' process e4 data for bvp '''
@@ -172,7 +173,7 @@ def update_func(date, time_range):
     [Input('data_type_DD', 'value'),
      Input('session_DD'  , 'value')])
 def update_e4_LineGraph(data_type, session):
-    return e4.fig(data_type, session)
+    return e4_LineGraph(data_type, session)
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
