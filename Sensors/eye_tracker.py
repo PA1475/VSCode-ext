@@ -4,8 +4,8 @@ import plotly.express as px
 import numpy as np
 
 from datetime import datetime, date, timedelta
-from .utils import filter_by_date
-from .utils import remove_file
+from utils import filter_by_date
+from utils import remove_file
 
 class EyeTracker():
     def __init__(self):
@@ -30,42 +30,45 @@ class EyeTracker():
         df = pd.DataFrame()
         for file in os.listdir(self._datadir):
             if '.csv' in file:
-                df_temp = pd.read_csv(self._datadir + file)
-                df_temp = self.clean_df(df_temp)
+                df_temp = self.clean_df(self._datadir + file)
                 df = pd.concat([df, df_temp])
         return df
 
-    def eye_tracker_cleanup(self,filepath):
+    def clean_df(self,filepath):
         """
-        Makes a new file based on the wanted column of the old file. Removes the old file and returns the file path of the new file.
-        args:
+        Makes a new file based on the wanted column of the old file. Removes the old file and returns the clean dataframe.\n
+        args:\n
             filepath: The filepath to the csv file to be cleaned up
         """
-        try:
-            new_df = pd.read_csv(filepath)
-            new_df = new_df.rename(columns = {new_df.columns[3]: 'time'})
-            new_df = new_df.iloc[0:,3:7]
-            new_file_name = str(os.path.basename(filepath))
-            new_df.to_csv(new_file_name)
-            os.rename(new_file_name,filepath[:-4]+"_clean.csv")
-            remove_file(filepath)
-        except FileNotFoundError:
-            print("File not found with filepath: '" +filepath+"'")  
-    
-    def clean_df(self, df):
-        ''' cleans the dataframe '''
+
         def convert_to_dateformat(start, sec):
             timechange = timedelta(seconds=sec)
             return start + timechange
 
-        desired_columns = [df.columns[3], 'FPOGX', 'FPOGY']
-        df = df[desired_columns]
-        start_time = df.columns[0]
-        timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
-        #df = df.rename(columns={'TIME(2022/01/27 09:39:32.995)': 'time'})
-        df['timeobj'] = df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
-        return df
-        
+        try:
+            new_df = pd.read_csv(filepath)
+            if "_clean.csv" not in filepath:
+                new_df = new_df.iloc[0:,3:7] # chooses the desired columns
+                new_file_name = str(os.path.basename(filepath))
+                new_df.to_csv(new_file_name)
+                os.rename(new_file_name,filepath[:-4]+"_clean.csv")
+                remove_file(filepath)
+                start_time = new_df.columns[0]
+            else:
+                start_time = new_df.columns[1]
+
+            timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
+            new_df = new_df.rename(columns = {new_df.columns[0]: 'time'})
+            new_df['timeobj'] = new_df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
+
+            new_df = new_df[new_df.index % 40 == 0] # keeps every 40th record in the dataframe
+
+        except FileNotFoundError:
+            print("File not found with filepath: '" +filepath+"'")  
+
+        print(type(new_df))
+        return new_df
+
     def heat_map(self, date):
         df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
 
