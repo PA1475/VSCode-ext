@@ -108,7 +108,9 @@ graph_card2 = dbc.Card(
 
 graph_card3 = dbc.Card(
     [
-        dcc.Graph(id='Eye tracker heatmap')
+        dcc.Graph(
+            id='Eye tracker heatmap',
+            figure = eye_tracker.heat_map())
     ]
 )
 
@@ -140,7 +142,10 @@ app.layout = html.Div(
                 )
             ]
         ),
-        dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center")
+        dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center"),
+        html.Hr(),
+        html.H2('Now for the Gazepoint visualization using a heatmap'),
+        dbc.Row(dbc.Col([graph_card3], align = 'center', width = 'auto') , justify = 'center')
     ], style={'textAlign': 'center'}
 )
 
