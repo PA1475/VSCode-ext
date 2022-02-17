@@ -4,8 +4,8 @@ import plotly.express as px
 import numpy as np
 
 from datetime import datetime, date, timedelta
-from .utils import filter_by_date
-from .utils import remove_file
+from utils import filter_by_date
+from utils import remove_file
 
 class EyeTracker():
     def __init__(self):
@@ -62,14 +62,16 @@ class EyeTracker():
         df = df[desired_columns]
         start_time = df.columns[0]
         timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
-        #df = df.rename(columns={'TIME(2022/01/27 09:39:32.995)': 'time'})
+        print(df)
+        #df = df.rename(columns={str(timeobj): 'time'})
+        df = df.rename({start_time: 'time'}, axis=1, inplace=True)  
         df['timeobj'] = df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
         return df
 
     def heat_map(self, date, time_range = [0, 24]):
-        #df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
+        '''Produces a heat map of the eyetracking data'''
         df = filter_by_date(self._df, date, time_range)
-
+        #df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
 
         a = np.zeros((36, 64))
         x_cords = df['FPOGX'].tolist()
@@ -81,12 +83,19 @@ class EyeTracker():
         y_max = max(y_cords)
 
         for i in range(len(x_cords)):
-            x = int(((x_cords[i]-x_min)/(x_max-x_min))*36)
-            y = int(((y_cords[i]-y_min)/(y_max-y_min))*64)
-
-            a[x-1,y-1] += 1
+            if 0.1 <= x_cords[i] <= 0.99 and 0.1 <= y_cords[i] <= 0.99:
+            #Adds only coordinates wich are on the screen
+                x = (int(x_cords[i] * 64))
+                y = (int(y_cords[i] * 36))
+                a[y-1,x-1] += 1
 
         fig = px.imshow(a,color_continuous_scale=px.colors.sequential.Plasma,
                         title="Heatmap of eye tracking data")
+        fig.update_layout(title_font={'size':27}, title_x=0.5)
+        fig.update_traces(hovertemplate="X-cord.: %{x}"
+                                        "<br>Y-cord.: %{y}"
+                                        "<br>Times viewed: %{z}<extra></extra>")
+
+        #fig.show()
 
         return fig
