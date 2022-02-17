@@ -120,11 +120,13 @@ e4_sessions = e4_get_sessions()
 app.layout = html.Div(
     [
         html.H1(children='Emotion Aware Dashboard'),
+        
         html.Hr(),
         dcc.DatePickerSingle(id='datepicker', date=date(2022, 1, 27)), 
         html.P('welcome to the most amazing app in the world where you get to know yourself at the deepest levels!'),
         html.P('starting with you eyes'),
         dbc.Row([graph_card], justify="center"),
+
         html.H2('Now for the E4 visualization! Use the tools below to customize your graph.'),
         dbc.Row(
             [
@@ -143,9 +145,11 @@ app.layout = html.Div(
             ]
         ),
         dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center"),
+        
         html.Hr(),
         html.H2('Now for the Gazepoint visualization using a heatmap'),
         dbc.Row(dbc.Col([graph_card3], align = 'center', width = 'auto') , justify = 'center')
+
     ], style={'textAlign': 'center'}
 )
 
