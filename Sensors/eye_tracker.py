@@ -1,9 +1,10 @@
 import os
 import pandas as pd
 import plotly.express as px
-import numpy as np
 
 from datetime import datetime, date, timedelta
+import numpy as np
+
 from Sensors.utils import filter_by_date
 from Sensors.utils import remove_file
 
@@ -12,7 +13,7 @@ class EyeTracker():
         self._datadir = 'data/eye_tracker/'
         self._df = self.accumulate_data()
 
-    def fig(self, date, time_range=[0, 24]):
+    def fig(self, date, time_range=[0, 23]):
         ''' produce a plotply figure with a selected timeframe '''
         df = filter_by_date(self._df, date, time_range)
         fig = px.scatter(df,
@@ -40,7 +41,6 @@ class EyeTracker():
         args:\n
             filepath: The filepath to the csv file to be cleaned up
         """
-
         def convert_to_dateformat(start, sec):
             timechange = timedelta(seconds=sec)
             return start + timechange

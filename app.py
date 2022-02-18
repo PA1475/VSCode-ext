@@ -11,6 +11,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 import Sensors.e4 as e4
 from Sensors.eye_tracker import EyeTracker
+from Sensors.e4 import E4Wristband
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -97,6 +98,7 @@ graph_card = dbc.Card(
     ]
 )
 
+
 graph_card2 = dbc.Card(
     [
         dcc.Graph(
@@ -115,6 +117,26 @@ graph_card3 = dbc.Card(
 )
 
 e4_sessions = e4_get_sessions()
+E4Wristband()
+
+
+range_slider = dcc.RangeSlider(0, 24, id='range_slider', value=[0, 23], step=0.2, marks={
+        0: '00:00',
+        2: '02:00',
+        4: '04:00',
+        6: '06:00',
+        8: '08:00',
+        10: '10:00',
+        12: '12:00',
+        14: '14:00',
+        16: '16:00',
+        18: '18:00',
+        20: '20:00',
+        22: '22:00',
+    }
+            
+)
+
 
 # the layout
 app.layout = html.Div(
@@ -123,6 +145,7 @@ app.layout = html.Div(
         
         html.Hr(),
         dcc.DatePickerSingle(id='datepicker', date=date(2022, 1, 27)), 
+        range_slider,
         html.P('welcome to the most amazing app in the world where you get to know yourself at the deepest levels!'),
         html.P('starting with you eyes'),
         dbc.Row([graph_card], justify="center"),
@@ -153,12 +176,15 @@ app.layout = html.Div(
     ], style={'textAlign': 'center'}
 )
 
+
 @app.callback(
         Output('eye_tracking_visualization', 'figure'),
-        Input('datepicker', 'date'))
-def update_func(date):
+        Input('datepicker', 'date'),
+        Input('range_slider', 'value'))
+def update_func(date, time_range):
     date = datetime.strptime(date, '%Y-%m-%d').date()
-    return eye_tracker.fig(date)
+    return eye_tracker.fig(date, time_range)
+
 
 @app.callback(
     Output('e4_LineGraph', 'figure'),
