@@ -108,6 +108,14 @@ graph_card2 = dbc.Card(
     ]
 )
 
+graph_card3 = dbc.Card(
+    [
+        dcc.Graph(
+            id='Eye tracker heatmap',
+            figure = eye_tracker.heat_map())
+    ]
+)
+
 e4_sessions = e4_get_sessions()
 E4Wristband()
 
@@ -134,12 +142,14 @@ range_slider = dcc.RangeSlider(0, 24, id='range_slider', value=[0, 23], step=0.2
 app.layout = html.Div(
     [
         html.H1(children='Emotion Aware Dashboard'),
+        
         html.Hr(),
         dcc.DatePickerSingle(id='datepicker', date=date(2022, 1, 27)), 
         range_slider,
         html.P('welcome to the most amazing app in the world where you get to know yourself at the deepest levels!'),
         html.P('starting with you eyes'),
         dbc.Row([graph_card], justify="center"),
+
         html.H2('Now for the E4 visualization! Use the tools below to customize your graph.'),
         dbc.Row(
             [
@@ -157,7 +167,12 @@ app.layout = html.Div(
                 )
             ]
         ),
-        dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center")
+        dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center"),
+        
+        html.Hr(),
+        html.H2('Now for the Gazepoint visualization using a heatmap'),
+        dbc.Row(dbc.Col([graph_card3], align = 'center', width = 'auto') , justify = 'center')
+
     ], style={'textAlign': 'center'}
 )
 
@@ -169,6 +184,7 @@ app.layout = html.Div(
 def update_func(date, time_range):
     date = datetime.strptime(date, '%Y-%m-%d').date()
     return eye_tracker.fig(date, time_range)
+
 
 @app.callback(
     Output('e4_LineGraph', 'figure'),
