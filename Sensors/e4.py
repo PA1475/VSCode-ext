@@ -1,9 +1,11 @@
 import pandas as pd
 import plotly.express as px
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
-from .utils import filter_by_date
+from .utils import filter_by_date, daylight_saving
+
+TIME_DIFFERENCE = 1
 
 
 class E4Wristband():
@@ -34,15 +36,21 @@ class E4Wristband():
 
 
     def _clean_df(self, df, time_zero):
+        # Frequency is located on first row
         frequency = int(df[df.columns[0]].iloc[0])
+        # Remove frequency
         df = df[1:]
+        # Only want one data point per second
         df = df[(df.index-1) % frequency == 0]
         df = df.reset_index(drop=True)
         print(df)
         def _u_to_d(unixtime):
-            dt = datetime.utcfromtimestamp(
-                unixtime).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            """ Translates unix time to datetime object """
+            dt = datetime.utcfromtimestamp(unixtime)
+            # Check for swedish daylight saving
+            dt = daylight_saving(dt)
             return dt
+        # Add a row displaying datetime per data
         df["time"] = [_u_to_d((i)+time_zero) for i in range(len(df[df.columns[0]]))]
         return df
 

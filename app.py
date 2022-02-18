@@ -11,6 +11,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 from Sensors.e4 import E4Wristband
 from Sensors.eye_tracker import EyeTracker
+from Sensors.e4 import E4Wristband
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -109,6 +110,7 @@ graph_card2 = dbc.Card(
 )
 
 e4_sessions = e4_get_sessions()
+E4Wristband()
 
 
 range_slider = dcc.RangeSlider(0, 24, id='range_slider', value=[0, 23], step=0.2, marks={
@@ -159,6 +161,7 @@ app.layout = html.Div(
         dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center")
     ], style={'textAlign': 'center'}
 )
+
 
 @app.callback(
         Output('eye_tracking_visualization', 'figure'),
