@@ -3,7 +3,10 @@ import pandas as pd
 import plotly.express as px
 
 from datetime import datetime, date, timedelta
-from .utils import filter_by_date
+import numpy as np
+
+from Sensors.utils import filter_by_date
+from Sensors.utils import remove_file
 
 class EyeTracker():
     def __init__(self):
@@ -28,27 +31,70 @@ class EyeTracker():
         df = pd.DataFrame()
         for file in os.listdir(self._datadir):
             if '.csv' in file:
-                df_temp = pd.read_csv(self._datadir + file)
-                df_temp = self.clean_df(df_temp)
+                df_temp = self.clean_df(self._datadir + file)
                 df = pd.concat([df, df_temp])
         return df
 
-    def clean_df(self, df):
-        ''' cleans the dataframe '''
+    def clean_df(self,filepath):
+        """
+        Makes a new file based on the wanted column of the old file. Removes the old file and returns the clean dataframe.\n
+        args:\n
+            filepath: The filepath to the csv file to be cleaned up
+        """
         def convert_to_dateformat(start, sec):
             timechange = timedelta(seconds=sec)
             return start + timechange
 
-        desired_columns = [df.columns[3], 'FPOGX', 'FPOGY']
-        df = df[desired_columns]
-        start_time = df.columns[0]
-        timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
-        df = df.rename(columns={start_time: 'time'})
-        df['timeobj'] = df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
-        
-        # keeps every 40th record in the dataframe
-        df = df[df.index % 40 == 0]
-        return df
-        
-        
-        
+        try:
+            new_df = pd.read_csv(filepath)
+            if "_clean.csv" not in filepath:
+                new_df = new_df.iloc[0:,3:7] # chooses the desired columns
+                new_file_name = str(os.path.basename(filepath))
+                new_df.to_csv(new_file_name)
+                os.rename(new_file_name,filepath[:-4]+"_clean.csv")
+                remove_file(filepath)
+                start_time = new_df.columns[0]
+            else:
+                start_time = new_df.columns[1]
+
+            timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
+            new_df = new_df.rename(columns = {new_df.columns[0]: 'time'})
+            new_df['timeobj'] = new_df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
+
+            new_df = new_df[new_df.index % 40 == 0] # keeps every 40th record in the dataframe
+
+        except FileNotFoundError:
+            print("File not found with filepath: '" +filepath+"'")  
+
+        print(type(new_df))
+        return new_df
+
+    def heat_map(self):
+        '''Creates a heat map from the eye tracking data'''
+        #df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
+        df = self._df
+
+        a = np.zeros((36, 64))
+        x_cords = df['FPOGX'].tolist()
+        y_cords = df['FPOGY'].tolist()
+
+        x_min = min(x_cords)
+        x_max = max(x_cords)
+        y_min = min(y_cords)
+        y_max = max(y_cords)
+
+        for i in range(len(x_cords)):
+            if 0.1 <= x_cords[i] <= 0.99 and 0.1 <= y_cords[i] <= 0.99:
+            #Adds only coordinates wich are on the screen
+                x = (int(x_cords[i] * 64))
+                y = (int(y_cords[i] * 36))
+                a[y-1,x-1] += 1
+
+        fig = px.imshow(a,color_continuous_scale=px.colors.sequential.Plasma,
+                        title="Heatmap of eye tracking data")
+        fig.update_layout(title_font={'size':27}, title_x=0.5)
+        fig.update_traces(hovertemplate="X-cord.: %{x}"
+                                        "<br>Y-cord.: %{y}"
+                                        "<br>Times viewed: %{z}<extra></extra>")
+
+        return fig

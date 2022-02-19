@@ -38,4 +38,3 @@ def daylight_saving(dt):
         dt += timedelta(hours=1)
 
     return dt
-    
