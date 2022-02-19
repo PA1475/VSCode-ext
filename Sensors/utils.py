@@ -1,5 +1,17 @@
 import pandas as pd
 from datetime import datetime, timedelta
+import os
+
+def remove_file(filepath):
+    """Removes a file with the given filepath, if it exists
+    args:
+        filepath: path to the file to be removed
+    """
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    else:
+        print("Can not delete the file as it doesn't exist")
+
 
 def filter_by_date(df, date, time=[0, 23]):
     '''Returs a dataframe filtered by date and time
@@ -20,6 +32,7 @@ def filter_by_date(df, date, time=[0, 23]):
     df = df[df['timeobj'] < end]
     
     return df
+
 
 def daylight_saving(dt):
     """Returns a datetime object, unchanged from output if 

@@ -5,13 +5,14 @@ import plotly.express as px
 from datetime import datetime, date, timedelta
 import numpy as np
 
-from Sensors.utils import filter_by_date
-from Sensors.utils import remove_file
+from .utils import filter_by_date, remove_file
+
 
 class EyeTracker():
     def __init__(self):
         self._datadir = 'data/eye_tracker/'
         self._df = self.accumulate_data()
+
 
     def fig(self, date, time_range=[0, 23]):
         ''' produce a plotply figure with a selected timeframe '''
@@ -26,6 +27,7 @@ class EyeTracker():
                      width=500)
         return fig
 
+
     def accumulate_data(self):
         ''' merges all the different recordings to a single dataframe with cleaned data '''
         df = pd.DataFrame()
@@ -34,6 +36,7 @@ class EyeTracker():
                 df_temp = self.clean_df(self._datadir + file)
                 df = pd.concat([df, df_temp])
         return df
+
 
     def clean_df(self,filepath):
         """
@@ -66,8 +69,8 @@ class EyeTracker():
         except FileNotFoundError:
             print("File not found with filepath: '" +filepath+"'")  
 
-        print(type(new_df))
         return new_df
+
 
     def heat_map(self):
         '''Creates a heat map from the eye tracking data'''
