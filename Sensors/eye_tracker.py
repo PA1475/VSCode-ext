@@ -20,10 +20,11 @@ class EyeTracker():
         fig = px.scatter(df,
                      x='FPOGX',
                      y='FPOGY',
+                     title='Eye position on the screen',
                      animation_frame='time',
                      range_x=[0, 1],
                      range_y=[1, 0],
-                     height=500,
+                     height=450,
                      width=500)
         return fig
 
@@ -72,10 +73,10 @@ class EyeTracker():
         return new_df
 
 
-    def heat_map(self):
+    def heat_map(self, date, time_range=[0, 23]):
         '''Creates a heat map from the eye tracking data'''
         #df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
-        df = self._df
+        df = filter_by_date(self._df, date, time_range)
 
         a = np.zeros((36, 64))
         x_cords = df['FPOGX'].tolist()

@@ -40,8 +40,7 @@ graph_card2 = dbc.Card(
 graph_card3 = dbc.Card(
     [
         dcc.Graph(
-            id='Eye tracker heatmap',
-            figure = eye_tracker.heat_map())
+            id='eye_tracker_heatmap')
     ]
 )
 
@@ -71,10 +70,10 @@ app.layout = html.Div(
         
         html.Hr(),
         dcc.DatePickerSingle(id='datepicker', date=date(2022, 1, 27)), 
-        range_slider,
-        html.P('welcome to the most amazing app in the world where you get to know yourself at the deepest levels!'),
-        html.P('starting with you eyes'),
-        dbc.Row([graph_card], justify="center"),
+        html.Hr(),
+        dbc.Row(dbc.Col(range_slider, width=10, align='center')),
+        html.H2('Eyetracker'),
+        dbc.Row([dbc.Col(graph_card, width=5), dbc.Col(graph_card3, width=5)], justify="center"),
 
         html.H2('Now for the E4 visualization! Use the tools below to customize your graph.'),
         dbc.Row(
@@ -87,11 +86,7 @@ app.layout = html.Div(
                 )
             ]
         ),
-        dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center"),
-        
-        html.Hr(),
-        html.H2('Now for the Gazepoint visualization using a heatmap'),
-        dbc.Row(dbc.Col([graph_card3], align = 'center', width = 'auto') , justify = 'center')
+        dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center")
 
     ], style={'textAlign': 'center'}
 )
@@ -101,9 +96,18 @@ app.layout = html.Div(
         Output('eye_tracking_visualization', 'figure'),
         Input('datepicker', 'date'),
         Input('range_slider', 'value'))
-def update_func(date, time_range):
+def update_eyetracker_scatterfig(date, time_range):
     date = datetime.strptime(date, '%Y-%m-%d').date()
     return eye_tracker.fig(date, time_range)
+
+
+@app.callback(
+        Output('eye_tracker_heatmap', 'figure'),
+        Input('datepicker', 'date'),
+        Input('range_slider', 'value'))
+def update_eyetracker_heatmap(date, time_range):
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+    return eye_tracker.heat_map(date, time_range)
 
 
 @app.callback(
