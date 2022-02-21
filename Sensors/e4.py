@@ -15,25 +15,36 @@ class E4Wristband():
 
 
     def _accumulate_data(self):
+        """
+        Returns dataframes for all e4 data
+        """
+        # initialize variables
         df1 = pd.DataFrame()
         df2 = pd.DataFrame()
         df3 = pd.DataFrame()
+        # get all files in e4 data dir
         for file in os.listdir(self._datadir):
             if '.csv' in file:
+                # read data from csv file
                 df_tmp = pd.read_csv(os.path.join(self._datadir, file))
+                # get time
                 time_zero = float(df_tmp.columns[0])
                 if 'EDA' in file:
+                    # get e4 data
                     df_tmp = df_tmp.rename(columns={df_tmp.columns[0]: 'EDA'})
                     df_tmp = self._clean_df(df_tmp, time_zero)
                     df1 = pd.concat([df1, df_tmp])
                 elif 'HR' in file:
+                    # get hr data
                     df_tmp = df_tmp.rename(columns={df_tmp.columns[0]: 'HR'})
                     df_tmp = self._clean_df(df_tmp, time_zero)
                     df2 = pd.concat([df2, df_tmp])
                 else:
+                    # assume bvp data
                     df_tmp = df_tmp.rename(columns={df_tmp.columns[0]: 'BVP'})
                     df_tmp = self._clean_df(df_tmp, time_zero)
                     df3 = pd.concat([df3, df_tmp])
+        # sort data
         df1 = df1.sort_values(by='timeobj')
         df2 = df2.sort_values(by='timeobj')
         df3 = df3.sort_values(by='timeobj')
@@ -60,11 +71,21 @@ class E4Wristband():
 
 
     def fig(self, data_type, date, time_range=[0, 24]):
+        """
+        Returns a plotly figure for the requested in data in requested timeframe
+        args:
+            data_type: what type of data ['EDA', 'HR', 'BVP']
+            date: a date object for the day you want to get data of
+            time_range: list of time from and to
+        """
+        # size for card
         BROWSER_HEIGHT = 500
         BROWSER_WIDTH = 750
+        # initialize variables
         df = pd.DataFrame()
         fig = None
         if data_type == 'EDA':
+            # use eda data
             df = filter_by_date(self._df_eda, date, time_range)
             fig = px.line(df,
                 x = 'timeobj',
@@ -73,6 +94,7 @@ class E4Wristband():
                 width=BROWSER_WIDTH
             )
         elif data_type == 'HR':
+            # use hr data
             df = filter_by_date(self._df_hr, date, time_range)
             fig = px.line(df,
                 x = 'timeobj',
@@ -81,6 +103,7 @@ class E4Wristband():
                 width=BROWSER_WIDTH
             )
         else:
+            # else use bvp data
             df = filter_by_date(self._df_bvp, date, time_range)
             fig = px.line(df,
                 x = 'timeobj',
