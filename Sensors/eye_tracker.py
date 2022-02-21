@@ -24,8 +24,13 @@ class EyeTracker():
                      animation_frame='time',
                      range_x=[0, 1],
                      range_y=[1, 0],
-                     height=450,
-                     width=500)
+                     #height=500,
+                     #width=500,
+                     )
+        fig.update_layout(title_font={'size':27}, 
+            title_x=0.5#,
+            #margin=dict(l=200, r=200, t=100, b=100)
+            )
         return fig
 
 

@@ -73,7 +73,7 @@ app.layout = html.Div(
         html.Hr(),
         dbc.Row(dbc.Col(range_slider, width=10, align='center')),
         html.H2('Eyetracker'),
-        dbc.Row([dbc.Col(graph_card, width=5), dbc.Col(graph_card3, width=5)], justify="center"),
+        dbc.Row([dbc.Col(graph_card, width=5, align='center'), dbc.Col(graph_card3, width=5)], justify="center"),
 
         html.H2('Now for the E4 visualization! Use the tools below to customize your graph.'),
         dbc.Row(
