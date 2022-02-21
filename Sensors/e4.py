@@ -1,51 +1,91 @@
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, timedelta
-from utils import daylight_saving
+import os
+
+from .utils import filter_by_date, daylight_saving
 
 TIME_DIFFERENCE = 1
 
-def _clean_df(df):
-    """
-    Adds datetime and renames column header
-        args:
-            df : Dataframe to be cleaned (EDA, HR, BVP)
-        return:
-            df : Cleaned dataframe
-    """
-    # Column header is start time
-    time_zero_str = df.columns[0]
-    # Give a more suiting name
-    df = df.rename(columns={time_zero_str : "data"})
-    time_zero = float(time_zero_str)
-    # Frequency is located on first row
-    frequency = int(df["data"].iloc[0])
-    # Remove frequency
-    df = df[1:]
-    # Only want one data point per second, removing row makes pandas indexing
-    # wierd
-    df = df[df.index % frequency == 1]
 
-    def _u_to_d(unixtime):
-        """ Translates unix time to datetime object """
-        dt = datetime.utcfromtimestamp(unixtime)
-        # Check for swedish daylight saving
-        dt = daylight_saving(dt)
-        return dt
+class E4Wristband():
+    def __init__(self):
+        self._datadir = 'data/e4_wristband'
+        self._df_eda, self._df_hr, self._df_bvp = self._accumulate_data()
 
-    # Add a row displaying datetime per data
-    df["time"] = [_u_to_d((i)+time_zero) for i in range(len(df["data"]))]
-    return df
 
-def get_e4_bvp(path):
-    ''' read ey temp data from specified path '''
+    def _accumulate_data(self):
+        df1 = pd.DataFrame()
+        df2 = pd.DataFrame()
+        df3 = pd.DataFrame()
+        for file in os.listdir(self._datadir):
+            if '.csv' in file:
+                df_tmp = pd.read_csv(os.path.join(self._datadir, file))
+                time_zero = float(df_tmp.columns[0])
+                if 'EDA' in file:
+                    df_tmp = df_tmp.rename(columns={df_tmp.columns[0]: 'EDA'})
+                    df_tmp = self._clean_df(df_tmp, time_zero)
+                    df1 = pd.concat([df1, df_tmp])
+                elif 'HR' in file:
+                    df_tmp = df_tmp.rename(columns={df_tmp.columns[0]: 'HR'})
+                    df_tmp = self._clean_df(df_tmp, time_zero)
+                    df2 = pd.concat([df2, df_tmp])
+                else:
+                    df_tmp = df_tmp.rename(columns={df_tmp.columns[0]: 'BVP'})
+                    df_tmp = self._clean_df(df_tmp, time_zero)
+                    df3 = pd.concat([df3, df_tmp])
+        df1 = df1.sort_values(by='timeobj')
+        df2 = df2.sort_values(by='timeobj')
+        df3 = df3.sort_values(by='timeobj')
+        return df1, df2, df3
 
-    df = pd.read_csv(path)
-    time = list(df)[0]
-    hz = df[time][0]
 
-    df['timestamp'] = [(float(time)+item/hz) for item in range(-1, len(df.index)-1)]
-    df = df.iloc[1:]
-    fig = px.line(df, x='timestamp', y=time)
+    def _clean_df(self, df, time_zero):
+        # Frequency is located on first row
+        frequency = int(df[df.columns[0]].iloc[0])
+        # Remove frequency
+        df = df[1:]
+        # Only want one data point per second
+        df = df[(df.index-1) % frequency == 0]
+        df = df.reset_index(drop=True)
+        def _u_to_d(unixtime):
+            """ Translates unix time to datetime object """
+            dt = datetime.utcfromtimestamp(unixtime)
+            # Check for swedish daylight saving
+            dt = daylight_saving(dt)
+            return dt
+        # Add a row displaying datetime per data
+        df["timeobj"] = [_u_to_d((i)+time_zero) for i in range(len(df[df.columns[0]]))]
+        return df
 
-    return fig
+
+    def fig(self, data_type, date, time_range=[0, 24]):
+        BROWSER_HEIGHT = 500
+        BROWSER_WIDTH = 750
+        df = pd.DataFrame()
+        fig = None
+        if data_type == 'EDA':
+            df = filter_by_date(self._df_eda, date, time_range)
+            fig = px.line(df,
+                x = 'timeobj',
+                y = 'EDA',
+                height=BROWSER_HEIGHT,
+                width=BROWSER_WIDTH
+            )
+        elif data_type == 'HR':
+            df = filter_by_date(self._df_hr, date, time_range)
+            fig = px.line(df,
+                x = 'timeobj',
+                y = 'HR',
+                height=BROWSER_HEIGHT,
+                width=BROWSER_WIDTH
+            )
+        else:
+            df = filter_by_date(self._df_bvp, date, time_range)
+            fig = px.line(df,
+                x = 'timeobj',
+                y = 'BVP',
+                height=BROWSER_HEIGHT,
+                width=BROWSER_WIDTH
+            )
+        return fig
