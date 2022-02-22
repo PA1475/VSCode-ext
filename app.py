@@ -69,7 +69,7 @@ app.layout = html.Div(
         html.H1(children='Emotion Aware Dashboard'),
         
         html.Hr(),
-        dcc.DatePickerSingle(id='datepicker', date=date(2022, 1, 27)), 
+        dcc.DatePickerSingle(id='datepicker', date=date(2022, 2, 9)), 
         html.Hr(),
         dbc.Row(dbc.Col(range_slider, width=10, align='center')),
         html.H2('Eyetracker'),
