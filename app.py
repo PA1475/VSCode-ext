@@ -86,6 +86,7 @@ app.layout = html.Div(
                 )
             ]
         ),
+        html.H4(id = 'e4_head',children=''),
         dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center")
 
     ], style={'textAlign': 'center'}
@@ -119,6 +120,14 @@ def update_e4_LineGraph(data_type, date, time_range):
     date = datetime.strptime(date, '%Y-%m-%d').date()
     return e4.fig(data_type, date, time_range)
 
+@app.callback(
+    Output('e4_head', 'children'),
+    Input('data_type_DD', 'value'),
+    Input('datepicker', 'date'),
+    Input('range_slider', 'value'))
+def update_e4_summary(data_type, date, time_range):
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+    return e4.card(data_type, date, time_range)
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
