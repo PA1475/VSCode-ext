@@ -85,7 +85,6 @@ class E4Wristband():
 
         # initialize variables
         df = pd.DataFrame()
-        fig = None
         if data_type == 'EDA':
             # use eda data
             df = filter_by_date(self._df_eda, date, time_range)
@@ -95,12 +94,15 @@ class E4Wristband():
         else:
             # else use bvp data
             df = filter_by_date(self._df_bvp, date, time_range)
+        # create figure
         fig = px.line(df,
             x = 'timeobj',
             y = data_type,
             height=BROWSER_HEIGHT,
-            width=BROWSER_WIDTH)
+            width=BROWSER_WIDTH
+        )
         return fig
+
 
     def card(self, data_type, date, time_range=[0, 24]):
         if data_type == 'EDA':
