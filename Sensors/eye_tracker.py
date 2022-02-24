@@ -57,13 +57,11 @@ class EyeTracker():
             if "_clean.csv" not in filepath:
                 new_df = new_df.iloc[0:,3:7] # chooses the desired columns
                 new_file_name = str(os.path.basename(filepath))
-                new_df.to_csv(new_file_name)
+                new_df.to_csv(new_file_name,index=False)
                 os.rename(new_file_name,filepath[:-4]+"_clean.csv")
                 remove_file(filepath)
-                start_time = new_df.columns[0]
-            else:
-                start_time = new_df.columns[1]
-
+            
+            start_time = new_df.columns[0]
             timeobj = datetime.strptime(start_time, 'TIME(%Y/%m/%d %H:%M:%S.%f)')
             new_df = new_df.rename(columns = {new_df.columns[0]: 'time'})
             new_df['timeobj'] = new_df['time'].apply(lambda x: convert_to_dateformat(timeobj, x))
