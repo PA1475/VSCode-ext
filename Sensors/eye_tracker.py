@@ -25,11 +25,9 @@ class EyeTracker():
                      range_x=[0, 1],
                      range_y=[1, 0],
                      height=525
-                     #width=500,
                      )
         fig.update_layout(title_font={'size':18},
-            title_x=0.5#,
-            #margin=dict(l=200, r=200, t=100, b=100)
+            title_x=0.5
             )
         return fig
 
@@ -80,24 +78,22 @@ class EyeTracker():
 
     def heat_map(self, date, time_range=[0, 23]):
         '''Creates a heat map from the eye tracking data'''
-        #df = pd.read_csv('data/eye_tracker/datainsamling/result_1/User 1_all_gaze.csv')
         df = filter_by_date(self._df, date, time_range)
 
         a = np.zeros((36, 64))
         x_cords = df['FPOGX'].tolist()
         y_cords = df['FPOGY'].tolist()
 
-        x_min = min(x_cords)
-        x_max = max(x_cords)
-        y_min = min(y_cords)
-        y_max = max(y_cords)
+        try:
+            for i in range(len(x_cords)):
+                if 0.1 <= x_cords[i] <= 0.99 and 0.1 <= y_cords[i] <= 0.99:
+                #Adds only coordinates wich are on the screen
+                    x = (int(x_cords[i] * 64))
+                    y = (int(y_cords[i] * 36))
+                    a[y-1,x-1] += 1
 
-        for i in range(len(x_cords)):
-            if 0.1 <= x_cords[i] <= 0.99 and 0.1 <= y_cords[i] <= 0.99:
-            #Adds only coordinates wich are on the screen
-                x = (int(x_cords[i] * 64))
-                y = (int(y_cords[i] * 36))
-                a[y-1,x-1] += 1
+        except TypeError:
+            print('No eye tracking data at this time.')
 
         fig = px.imshow(a,color_continuous_scale=px.colors.sequential.Plasma,
                         title="Heatmap of eye tracking data")
