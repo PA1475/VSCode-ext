@@ -24,10 +24,10 @@ class EyeTracker():
                      animation_frame='time',
                      range_x=[0, 1],
                      range_y=[1, 0],
-                     height=500,
+                     height=525
                      #width=500,
                      )
-        fig.update_layout(title_font={'size':27},
+        fig.update_layout(title_font={'size':18},
             title_x=0.5#,
             #margin=dict(l=200, r=200, t=100, b=100)
             )
@@ -101,7 +101,7 @@ class EyeTracker():
 
         fig = px.imshow(a,color_continuous_scale=px.colors.sequential.Plasma,
                         title="Heatmap of eye tracking data")
-        fig.update_layout(title_font={'size':27}, title_x=0.5)
+        fig.update_layout(title_font={'size':18}, title_x=0.5)
         fig.update_traces(hovertemplate="X-cord.: %{x}"
                                         "<br>Y-cord.: %{y}"
                                         "<br>Times viewed: %{z}<extra></extra>")
