@@ -62,36 +62,116 @@ range_slider = dcc.RangeSlider(0, 24, id='range_slider', value=[0, 23], step=0.2
             
 )
 
+jumbotronRow = dbc.Row(
+            dbc.Container(
+                [
+                    html.H1("Emotional Aware Dashboard"),
+                    html.P("Explore your data from the E4 wristband, eyetracker and EEG headset")
+                ]
+            ),
+            className="text-white h-200 bg-dark",
+            style={
+                'padding' : 20,
+                'textAlign': 'center'
+            }
+        )
 
+E4description = "The E4 wirstband measures both heartrate, sweat and BVP. Heartrate is the number of beats per minute. The heartrate tends to up when your stressed. The same is true for sweat."
+E4_DATA_TYPES = ["EDA", "HR", "BVP"]
+E4_counter = 0
+
+date_picker_bar = html.Div(
+    html.Div(
+        children=[
+                    html.H4('Select a timeframe', style={'margin': 'auto', 'margin-right':20}),
+                    html.P('Date:', style={'margin':'auto'}),
+                    dcc.DatePickerSingle(id='datepicker', date=date(2022, 2, 9), style={'background-color':'red', 'border-radius':10}),
+                    html.P('Start time:', style={'margin':'auto'}),
+                    dcc.Dropdown(['08:00', '10:00'], '08:00', id='start', style={'width':100}),
+                    html.P('End time:', style={'margin':'auto'}),
+                    dcc.Dropdown(['08:00', '10:00'], '08:00', id='end', style={'width':100}),
+                ], style={'width':'fit-content',
+                      'display':'grid',
+                      'gap':20,
+                      'grid-auto-flow':'column',
+                      'align-items':'center',
+                      'vertical-align':'center',
+                      'margin':'0 auto',
+                      'background': '#F4F4F4',
+                      'border-radius':10,
+                      'padding':10,
+                      'padding-right':30,
+                      'padding-left':30}
+                ), style={'justify-content':'center', 'width':'auto', 'padding-bottom' : 40}
+)
+
+E4ColumnPicker = dbc.Col(
+    [
+        html.Div(
+            html.H2("E4 Wristband"),
+            style={
+                'textAlign': 'center',
+                'padding' : 10
+                }
+        ),
+        html.Div(
+            dbc.Card(
+                [
+                    dbc.CardBody(
+                        [
+                            html.H4("Select datasource", className="card-title"),
+                            dcc.Dropdown(options=[{'label' : 'Heart rate', 'value' : 'HR'},{'label' : 'EDA', 'value' : 'EDA'}, {'label':'Blood Volume Pulse','value':'BVP'}], value="HR", id='e4dropdown', style={'width':200})
+                        ]
+                    )
+                ],
+                color="light"
+            )
+        ),
+        html.Div(
+            [
+                html.Div(
+                    html.P(E4description)
+                ),
+                html.P("BVP stands for blood volume pulse and bla bla lba.")
+            ],
+            style={
+                'padding' : 5
+            }
+        )
+    ],
+    width=3,
+    style={
+        'padding' : 30,
+        "width" : "24rem"
+    }
+)
+
+E4Graph = dbc.Col(
+    [graph_card2]
+    , align='center',
+    width=6
+)
 # the layout
 app.layout = html.Div(
     [
-        html.H1(children='Emotion Aware Dashboard'),
-        
-        html.Hr(),
-        dcc.DatePickerSingle(id='datepicker', date=date(2022, 2, 9)), 
-        html.Hr(),
-        dbc.Row(dbc.Col(range_slider, width=10, align='center')),
-        html.H2('Eyetracker'),
-        dbc.Row([dbc.Col(graph_card, width=5, align='center'), dbc.Col(graph_card3, width=5)], justify="center"),
-
-        html.H2('Now for the E4 visualization! Use the tools below to customize your graph.'),
-        dbc.Row(
-            [
-                dbc.Col(
-                    [
-                        html.P('Select data type'),
-                        dcc.Dropdown(["EDA", "HR", "BVP"], "EDA", id='data_type_DD')
-                    ]
+        jumbotronRow,
+        html.Div(
+            children=[
+                date_picker_bar,
+                dbc.Row(
+                [
+                    E4ColumnPicker,
+                    E4Graph,
+                ]
                 )
             ]
+        ,
+        style= {'padding' : 100}
         ),
-        html.H4(id = 'e4_head',children=''),
-        dbc.Row(dbc.Col([graph_card2], align='center', width="auto") , justify="center")
-
-    ], style={'textAlign': 'center'}
+        html.H2('Eyetracker'),
+        dbc.Row([dbc.Col(graph_card, width=5), dbc.Col(graph_card3, width=5)], justify="center")
+    ]
 )
-
 
 @app.callback(
         Output('eye_tracking_visualization', 'figure'),
@@ -108,6 +188,7 @@ def update_eyetracker_scatterfig(date, time_range):
         Input('range_slider', 'value'))
 def update_eyetracker_heatmap(date, time_range):
     date = datetime.strptime(date, '%Y-%m-%d').date()
+    print(time_range)
     return eye_tracker.heat_map(date, time_range)
 
 
@@ -119,6 +200,7 @@ def update_eyetracker_heatmap(date, time_range):
 def update_e4_LineGraph(data_type, date, time_range):
     date = datetime.strptime(date, '%Y-%m-%d').date()
     return e4.fig(data_type, date, time_range)
+
 
 @app.callback(
     Output('e4_head', 'children'),
