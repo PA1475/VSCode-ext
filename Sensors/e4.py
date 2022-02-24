@@ -85,6 +85,7 @@ class E4Wristband():
 
         # initialize variables
         df = pd.DataFrame()
+
         if data_type == 'EDA':
             # use eda data
             df = filter_by_date(self._df_eda, date, time_range)
