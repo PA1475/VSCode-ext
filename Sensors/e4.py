@@ -82,7 +82,7 @@ class E4Wristband():
         # size for card
         BROWSER_HEIGHT = 500
         BROWSER_WIDTH = 750
-        
+
         # initialize variables
         df = pd.DataFrame()
 
@@ -95,27 +95,25 @@ class E4Wristband():
         else:
             # else use bvp data
             df = filter_by_date(self._df_bvp, date, time_range)
+        # create figure
         fig = px.line(df,
             x = 'timeobj',
             y = data_type,
             height=BROWSER_HEIGHT,
-            width=BROWSER_WIDTH)
+            width=BROWSER_WIDTH
+        )
         return fig
 
 
     def card(self, data_type, date, time_range=[0, 24]):
         if data_type == 'EDA':
-            df = filter_by_date(self._df_eda, date, time_range
-            )
-            name = "Tingle "
+            df = filter_by_date(self._df_eda, date, time_range)
         elif data_type == 'HR':
-            df = filter_by_date(self._df_hr, date, time_range
-            )
-            name = "Heart rate"
+            df = filter_by_date(self._df_hr, date, time_range)
         else:
-            df = filter_by_date(self._df_bvp, date, time_range
-            )
-            name = "Blod Pressure Volume"
-        avg = df[data_type].mean()
-        return f'Your average {name} is {round(avg,2)}'
+            df = filter_by_date(self._df_bvp, date, time_range)
+        _min = df[data_type].min()
+        _avg = df[data_type].mean()
+        _max = df[data_type].max()
+        return _min, _avg, _max
 

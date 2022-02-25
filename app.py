@@ -45,6 +45,12 @@ graph_card3 = dbc.Card(
     ]
 )
 
+summary_view1 = dbc.Card(
+    [
+        html.P(id = 'e4_summary_view', children='')
+    ]
+)
+
 
 header = dbc.Row(
             dbc.Container(
@@ -134,6 +140,8 @@ E4ColumnPicker = dbc.Col(
 
 E4Graph = dbc.Col([e4_fig], align='center',width=6)
 
+E4Summary = dbc.Col([summary_view1], align='right', width='3')
+
 # the layout
 app.layout = html.Div(
     [
@@ -145,6 +153,7 @@ app.layout = html.Div(
                     [
                         E4ColumnPicker,
                         E4Graph,
+                        E4Summary,
                     ]
                 )
             ], style= {'padding-left' : 80, 'padding-right' : 80}
@@ -189,7 +198,7 @@ def update_e4_LineGraph(data_type, date, start, end):
 
 
 @app.callback(
-    Output('e4_head', 'children'),
+    Output('e4_summary_view', 'children'),
     Input('e4dropdown', 'value'),
     Input('datepicker', 'date'),
     Input('start', 'value'),
@@ -197,7 +206,54 @@ def update_e4_LineGraph(data_type, date, start, end):
 def update_e4_summary(data_type, date, start, end):
     time_range = [start, end]
     date = datetime.strptime(date, '%Y-%m-%d').date()
-    return e4.card(data_type, date, time_range)
+    _min, _avg, _max = e4.card(data_type, date, time_range)
+
+    div = html.Div(
+        children=[
+            html.Div(
+                children = [
+                    html.H4(_min, style={'margin' : 'auto', 'margin-right' : 20}),
+                    html.P('Minimum '+data_type, style={'margin' : 'auto'}),
+                ], style={'width' : 'fit-content',
+                          'background' : '#A4A4F4',
+                          'border-radius' : 10,
+                          'padding' : 10,
+                          'margin' : 5,
+                          }
+                ),
+
+                html.Div(
+                children = [
+                    html.H4(_avg, style={'margin' : 'auto', 'margin-right' : 20}),
+                    html.P('Average '+data_type, style={'margin' : 'auto'}),
+                ], style={'width' : 'fit-content',
+                          'background' : '#A4A4F4',
+                          'border-radius' : 10,
+                          'padding' : 10,
+                          'margin' : 5,
+                          }
+                ),
+
+                html.Div(
+                children = [
+                    html.H4(_max, style={'margin' : 'auto', 'margin-right' : 20}),
+                    html.P('Maximum '+data_type, style={'margin' : 'auto'}),
+                ], style={'width' : 'fit-content',
+                          'background' : '#A4A4F4',
+                          'border-radius' : 10,
+                          'padding' : 10,
+                          'margin' : 5,
+                          }
+                ),
+
+        ], style={'width' : 'fit-content',
+                  'background' : '#F4F4F4',
+                  'border-radius' : 10,
+                  'padding' : 10,
+                  }
+    )
+
+    return div
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
