@@ -4,3 +4,4 @@ venv/
 data/.DS_Store
 data/eye_tracker/.DS_Store
 eye_tracker.ipynb
+*.pyc
