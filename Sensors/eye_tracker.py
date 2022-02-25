@@ -1,4 +1,5 @@
 import os
+import plotly.graph_objects as go
 import pandas as pd
 import plotly.express as px
 
@@ -22,12 +23,15 @@ class EyeTracker():
                      y='FPOGY',
                      title="Eye's position on the screen",
                      animation_frame='time',
+                     labels={'time':'Seconds after calibration'},
                      range_x=[0, 1],
                      range_y=[1, 0],
                      height=525
                      )
         fig.update_layout(title_font={'size':18},
-            title_x=0.5
+            title_x=0.5,
+            xaxis = go.XAxis(visible=False, showticklabels=False),
+            yaxis = go.YAxis(visible=False, showticklabels=False)
             )
         return fig
 

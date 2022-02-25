@@ -40,9 +40,12 @@ header = dbc.Row(
         )
 
 
-E4description = '''The E4 wirstband measures both heartrate, sweat
-                   and BVP. Heartrate is the number of beats per minute.
-                   The heartrate tends to up when your stressed. The same is true for sweat.'''
+E4description_p1 = """Blood Volume Pulse (BVP) is the change of blood volume in the microvascular bed of tissue.
+                            This is used to generate the heart rate. However, compared to the heart rate, BVP has a higher
+                            frequency and more precision."""
+
+E4description_p2 = """Blood Volume Pulse (BVP) is the change of blood volume in the microvascular bed of tissue. 
+                    This is used to generate the heart rate. However, compared to the heart rate, BVP has a higher frequency and more precision."""
 
 time_labels = [{'label':f'{i:02}:00', 'value':i} for i in range(0, 24, 2)]
 
@@ -100,9 +103,9 @@ E4ColumnPicker = dbc.Col(
             [
                 html.Div(
                     html.P([
-                            E4description, 
+                            E4description_p1, 
                             html.Br(), html.Br(), 
-                            'BVP stands for blood volume pulse and bla bla lba.'
+                            E4description_p2
                             ], style={'color' : '#353535', 'margin-top': 20})
                 ),
             ], style={'padding' : 5}
