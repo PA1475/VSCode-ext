@@ -18,39 +18,12 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 eye_tracker = EyeTracker()
 e4 = E4Wristband()
 
+light_grey_color = '#F4F4F4'
 
 # defining the graph outside the layout for easier read
-graph_card = dbc.Card(
-    [
-        dcc.Graph(
-            id='eye_tracking_visualization')
-    ]
-)
-
-
-# graph_card2 = dbc.Card(
-#     [
-#         dcc.Graph(
-#             id='e4_LineGraph'
-#         )
-#     ]
-# )
-
+graph_card = dcc.Graph(id='eye_tracking_visualization')
 e4_fig = dcc.Graph(id='e4_LineGraph')
-
-graph_card3 = dbc.Card(
-    [
-        dcc.Graph(
-            id='eye_tracker_heatmap')
-    ]
-)
-
-summary_view1 = dbc.Card(
-    [
-        html.P(id = 'e4_summary_view', children='')
-    ]
-)
-
+graph_card3 = dcc.Graph(id='eye_tracker_heatmap')
 
 header = dbc.Row(
             dbc.Container(
@@ -66,9 +39,10 @@ header = dbc.Row(
             }
         )
 
-E4description = "The E4 wirstband measures both heartrate, sweat and BVP. Heartrate is the number of beats per minute. The heartrate tends to up when your stressed. The same is true for sweat."
-E4_DATA_TYPES = ["EDA", "HR", "BVP"]
-E4_counter = 0
+
+E4description = '''The E4 wirstband measures both heartrate, sweat
+                   and BVP. Heartrate is the number of beats per minute.
+                   The heartrate tends to up when your stressed. The same is true for sweat.'''
 
 time_labels = [{'label':f'{i:02}:00', 'value':i} for i in range(0, 24, 2)]
 
@@ -120,7 +94,7 @@ E4ColumnPicker = dbc.Col(
                                 style={'width':200}
                             )
                         ])
-                    ], color='#F4F4F4'),
+                    ], color=light_grey_color),
         ),
         html.Div(
             [
@@ -139,8 +113,18 @@ E4ColumnPicker = dbc.Col(
 )
 
 E4Graph = dbc.Col([e4_fig], align='center',width=6)
+E4Summary = dbc.Col([html.Div(children=[], id='summary', style={'padding' : 30})], align='right', width='3')
 
-E4Summary = dbc.Col([summary_view1], align='right', width='3')
+def summary_card(number, source, label):
+    return html.Div([
+            html.H4(str(number), style={'margin' : 10}),
+            html.P(f'{label} {source}', style={'margin' : 10})],
+            style={
+                'text-align' : 'center',
+                'padding' : 10,
+                'margin' : 20,
+                'background' : light_grey_color,
+                'border-radius' : 20})
 
 # the layout
 app.layout = html.Div(
@@ -155,11 +139,12 @@ app.layout = html.Div(
                         E4Graph,
                         E4Summary,
                     ]
-                )
+                ),
+            html.Hr(),
+            html.H2('Eyetracker'),
+            dbc.Row([dbc.Col(graph_card, width=5), dbc.Col(graph_card3, width=5)], justify="center")
             ], style= {'padding-left' : 80, 'padding-right' : 80}
         ),
-        html.H2('Eyetracker'),
-        dbc.Row([dbc.Col(graph_card, width=5), dbc.Col(graph_card3, width=5)], justify="center")
     ]
 )
 
@@ -198,7 +183,7 @@ def update_e4_LineGraph(data_type, date, start, end):
 
 
 @app.callback(
-    Output('e4_summary_view', 'children'),
+    Output('summary', 'children'),
     Input('e4dropdown', 'value'),
     Input('datepicker', 'date'),
     Input('start', 'value'),
@@ -207,53 +192,9 @@ def update_e4_summary(data_type, date, start, end):
     time_range = [start, end]
     date = datetime.strptime(date, '%Y-%m-%d').date()
     _min, _avg, _max = e4.card(data_type, date, time_range)
-
-    div = html.Div(
-        children=[
-            html.Div(
-                children = [
-                    html.H4(_min, style={'margin' : 'auto', 'margin-right' : 20}),
-                    html.P('Minimum '+data_type, style={'margin' : 'auto'}),
-                ], style={'width' : 'fit-content',
-                          'background' : '#A4A4F4',
-                          'border-radius' : 10,
-                          'padding' : 10,
-                          'margin' : 5,
-                          }
-                ),
-
-                html.Div(
-                children = [
-                    html.H4(_avg, style={'margin' : 'auto', 'margin-right' : 20}),
-                    html.P('Average '+data_type, style={'margin' : 'auto'}),
-                ], style={'width' : 'fit-content',
-                          'background' : '#A4A4F4',
-                          'border-radius' : 10,
-                          'padding' : 10,
-                          'margin' : 5,
-                          }
-                ),
-
-                html.Div(
-                children = [
-                    html.H4(_max, style={'margin' : 'auto', 'margin-right' : 20}),
-                    html.P('Maximum '+data_type, style={'margin' : 'auto'}),
-                ], style={'width' : 'fit-content',
-                          'background' : '#A4A4F4',
-                          'border-radius' : 10,
-                          'padding' : 10,
-                          'margin' : 5,
-                          }
-                ),
-
-        ], style={'width' : 'fit-content',
-                  'background' : '#F4F4F4',
-                  'border-radius' : 10,
-                  'padding' : 10,
-                  }
-    )
-
-    return div
+    return [summary_card(round(_avg, 3), data_type, 'average'),
+            summary_card(round(_min, 3), data_type, 'min'),
+            summary_card(round(_max, 3), data_type, 'max')]
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
