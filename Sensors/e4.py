@@ -98,9 +98,7 @@ class E4Wristband():
         # create figure
         fig = px.line(df,
             x = 'timeobj',
-            y = data_type,
-            height=BROWSER_HEIGHT,
-            width=BROWSER_WIDTH
+            y = data_type
         )
         return fig
 

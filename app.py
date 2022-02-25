@@ -112,17 +112,18 @@ E4ColumnPicker = dbc.Col(
     style={'padding' : 30,'width' : '24rem'}
 )
 
-E4Graph = dbc.Col([e4_fig], align='center',width=6)
-E4Summary = dbc.Col([html.Div(children=[], id='summary', style={'padding' : 30})], align='right', width='3')
+E4Graph = dbc.Col([e4_fig], width=6)
+E4Summary = dbc.Col([html.Div(children=[], id='summary', style={'padding' : 10, 'align' : 'right'})], align='right', width=2)
 
 def summary_card(number, source, label):
     return html.Div([
-            html.H4(str(number), style={'margin' : 10}),
-            html.P(f'{label} {source}', style={'margin' : 10})],
+            html.H4(str(number), style={'margin' : 7}),
+            html.P(f'{label} {source}', style={'margin' : 7})],
             style={
                 'text-align' : 'center',
                 'padding' : 10,
-                'margin' : 20,
+                'margin-top' : 15,
+                'margin-bottom' : 15,
                 'background' : light_grey_color,
                 'border-radius' : 20})
 
@@ -138,12 +139,12 @@ app.layout = html.Div(
                         E4ColumnPicker,
                         E4Graph,
                         E4Summary,
-                    ]
+                    ], justify='between', align='center'
                 ),
             html.Hr(),
             html.H2('Eyetracker'),
             dbc.Row([dbc.Col(graph_card, width=5), dbc.Col(graph_card3, width=5)], justify="center")
-            ], style= {'padding-left' : 80, 'padding-right' : 80}
+            ], style= {'padding-left' : 60, 'padding-right' : 60}
         ),
     ]
 )
