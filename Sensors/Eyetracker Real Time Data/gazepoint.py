@@ -49,6 +49,16 @@ class GazePoint(threading.Thread):
         while not self.interrupted.locked():
             time.sleep(sleep_time)
 
+    def stuck_check(self, xmin, xmax, ymin, ymax):
+        xstuck = False
+        ystuck = False
+        if abs(xmin * 16 - xmax * 16) <= 1:
+            xstuck = True
+        if abs(ymin * 9 - ymax * 9) <= 1:
+            ystuck = True
+        if xstuck and ystuck:
+            return('ATTENTION! Your eyes seems to have gotten stuck.')
+
 
 if __name__ == '__main__':
     gazetracker = GazePoint()  
