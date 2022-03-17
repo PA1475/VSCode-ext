@@ -51,11 +51,24 @@ class GazePoint(threading.Thread):
 
 
 if __name__ == '__main__':
-    gazetracker = GazePoint()
+    gazetracker = GazePoint()  
 
+    xcoords = []
+    ycoords = []
+    avg_x = []
+    counter = 0
     start = time.time()
-    while time.time() - start < 15:  
-        print(gazetracker.get_gaze_position())
-        time.sleep(0.1)
-
+    while time.time() - start < 30:
+        counter += 1
+        coordinate = gazetracker.get_gaze_position()
+        if counter % 30 == 0:
+            print(counter)
+            if coordinate[0] is not None: 
+                xcoords.append(coordinate[0])
+            if coordinate[1] is not None: 
+                ycoords.append(coordinate[1])
+            if len(xcoords) != 0:
+                avg_x.append(sum(xcoords)/len(xcoords))
+            #print("X:",coordinate[0],"Y:",coordinate[1])
+    print(len(xcoords))
     gazetracker.stop()
