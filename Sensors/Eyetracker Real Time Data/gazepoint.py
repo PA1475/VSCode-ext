@@ -3,7 +3,6 @@ import threading
 
 from tools import OpenGazeTracker
 
-
 class GazePoint(threading.Thread):
     def __init__(self, ip='127.0.0.1', port=4242):
         threading.Thread.__init__(self)
@@ -49,26 +48,51 @@ class GazePoint(threading.Thread):
         while not self.interrupted.locked():
             time.sleep(sleep_time)
 
+    def stuck_check(self, xmin, xmax, ymin, ymax):
+        xstuck = False
+        ystuck = False
+
+        if abs(xmin - xmax) <= 0.2:
+            xstuck = True
+        if abs(ymin - ymax) <= (1/3):
+            ystuck = True
+        if xstuck and ystuck:
+            if xmax <= 1/3 and xmax >= 0:
+                x_axis = 'left'
+            elif xmax <= 2/3:
+                x_axis = 'center'
+            elif xmax <= 1:
+                x_axis = 'right'
+            
+            if ymax <= 1/2 and ymax >= 0:
+                y_axis = 'top'
+            elif xmax <= 1:
+                y_axis = 'bottom'
+
+            if (0 > xmax or xmax > 1) or (0 > ymax or ymax > 1):
+                return 'You are currently looking away from the screen. This will result in a pay cut.'
+                
+            return ('ATTENTION! Your eyes seems to have gotten stuck '+str(y_axis + x_axis))
 
 if __name__ == '__main__':
     gazetracker = GazePoint()  
-
+    print("Done setting up connection to eyetracker")
     xcoords = []
     ycoords = []
-    avg_x = []
-    counter = 0
     start = time.time()
-    while time.time() - start < 30:
-        counter += 1
+    while time.time() - start < 120:
+        time.sleep(0.5)
         coordinate = gazetracker.get_gaze_position()
-        if counter % 30 == 0:
-            print(counter)
-            if coordinate[0] is not None: 
-                xcoords.append(coordinate[0])
-            if coordinate[1] is not None: 
-                ycoords.append(coordinate[1])
-            if len(xcoords) != 0:
-                avg_x.append(sum(xcoords)/len(xcoords))
-            #print("X:",coordinate[0],"Y:",coordinate[1])
-    print(len(xcoords))
+        if coordinate[0] is not None: 
+            if len(xcoords) > 12:
+                xcoords.pop(0)
+            xcoords.append(coordinate[0])
+        if coordinate[1] is not None:
+            if len(ycoords) > 12:
+                ycoords.pop(0)
+            ycoords.append(coordinate[1])
+        if len(xcoords) > 8:
+            stuck = gazetracker.stuck_check(min(xcoords),max(xcoords),min(ycoords),max(ycoords))
+            if stuck is not None:
+                print(stuck)
     gazetracker.stop()
