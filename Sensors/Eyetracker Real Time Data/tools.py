@@ -920,7 +920,7 @@ class OpenGazeTracker:
         """
 
         # Send the message (returns after the Server acknowledges receipt).
-        acknowledged, timeout = self._send_message('SET', 'SCREEN_SIZE', values=[('X', x), ('Y', x), ('WIDTH', w), ('HEIGHT', h)], wait_for_acknowledgement=True)
+        acknowledged, timeout = self._send_message('SET', 'SCREEN_SIZE', values=[('X', x), ('Y', y), ('WIDTH', w), ('HEIGHT', h)], wait_for_acknowledgement=True)
 
         # Return a success Boolean.
         return acknowledged and (timeout is False)
