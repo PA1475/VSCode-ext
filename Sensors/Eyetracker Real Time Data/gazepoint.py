@@ -76,38 +76,56 @@ class GazePoint(threading.Thread):
 
             return ('ATTENTION! Your eyes seems to have gotten stuck '+str(y_axis + x_axis))
 
+class Livestream():
+    def __init__(self):
+        self.stream = False
+
+    def run(self, command):
+        '''Starts or stops the streaming'''
+        if command or not command:
+            self.stream = command
+        else:
+            raise ValueError('Only Boolean values are allowed')
+
+        if command:
+            self.stream()
+
+    def stream(self):
+        '''Function for livestreaming the eyetracker'''
+        gazetracker = GazePoint()  
+        print("Done setting up connection to eyetracker")
+        xcoords = []
+        ycoords = []
+        last_sec = []
+        gazetracker.tracker.enable_send_time(state=True)
+        while self.stream:
+            time.sleep(1/60)
+            coordinate = gazetracker.get_gaze_position()
+            if coordinate[0] is not None and coordinate[1] is not None:
+                last_sec.append(coordinate)
+            if len(last_sec) >= 60:
+                x_sum = 0
+                y_sum = 0
+                for coord in last_sec:
+                    x_sum += coord[0]
+                    y_sum += coord[1]
+                coordinate = (x_sum/len(last_sec),y_sum/len(last_sec))
+                last_sec = []
+                print(coordinate)
+                if coordinate[0] is not None: 
+                    if len(xcoords) > 12:
+                        xcoords.pop(0)
+                    xcoords.append(coordinate[0])
+                if coordinate[1] is not None:
+                    if len(ycoords) > 12:
+                        ycoords.pop(0)
+                    ycoords.append(coordinate[1])
+                if len(xcoords) > 8:
+                    stuck = gazetracker.stuck_check(min(xcoords),max(xcoords),min(ycoords),max(ycoords))
+                    if stuck is not None:
+                        print(stuck)
+        gazetracker.stop()
+
+
 if __name__ == '__main__':
-    gazetracker = GazePoint()  
-    print("Done setting up connection to eyetracker")
-    xcoords = []
-    ycoords = []
-    last_sec = []
-    gazetracker.tracker.enable_send_time(state=True)
-    start = time.time()
-    while time.time() - start < 120:
-        time.sleep(1/60)
-        coordinate = gazetracker.get_gaze_position()
-        if coordinate[0] is not None and coordinate[1] is not None:
-            last_sec.append(coordinate)
-        if len(last_sec) >= 60:
-            x_sum = 0
-            y_sum = 0
-            for coord in last_sec:
-                x_sum += coord[0]
-                y_sum += coord[1]
-            coordinate = (x_sum/len(last_sec),y_sum/len(last_sec))
-            last_sec = []
-            print(coordinate)
-            if coordinate[0] is not None: 
-                if len(xcoords) > 12:
-                    xcoords.pop(0)
-                xcoords.append(coordinate[0])
-            if coordinate[1] is not None:
-                if len(ycoords) > 12:
-                    ycoords.pop(0)
-                ycoords.append(coordinate[1])
-            if len(xcoords) > 8:
-                stuck = gazetracker.stuck_check(min(xcoords),max(xcoords),min(ycoords),max(ycoords))
-                if stuck is not None:
-                    print(stuck)
-    gazetracker.stop()
+    stream = Livestream()  
