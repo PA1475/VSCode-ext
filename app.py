@@ -12,19 +12,20 @@ import dash_bootstrap_components as dbc
 from Sensors.e4 import E4Wristband
 from Sensors.eye_tracker import EyeTracker
 from Sensors.e4 import E4Wristband
+from Sensors.piechart import Piechart
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 eye_tracker = EyeTracker()
 e4 = E4Wristband()
-
+pie = Piechart()
 light_grey_color = '#F4F4F4'
 
 # defining the graph outside the layout for easier read
 graph_card = dcc.Graph(id='eye_tracking_visualization')
 e4_fig = dcc.Graph(id='e4_LineGraph')
 graph_card3 = dcc.Graph(id='eye_tracker_heatmap')
-
+pie_card = dcc.Graph(id="pie_chart")
 header = dbc.Row(
             dbc.Container(
                 [
@@ -144,10 +145,23 @@ app.layout = html.Div(
                         E4Summary,
                     ], justify='between', align='center'
                 ),
+
             html.Hr(),
             html.H2('Eyetracker'),
-            dbc.Row([dbc.Col(graph_card, width=5), dbc.Col(graph_card3, width=5)], justify="center")
-            ], style= {'padding-left' : 60, 'padding-right' : 60}
+            dbc.Row(
+                [dbc.Col(
+                    graph_card, width=5)
+                ,dbc.Col(
+                    graph_card3, width=5)
+                ], justify="center"),
+
+            dbc.Row(
+                [dbc.Col(
+                    html.H2("Daily Summary")),
+                dbc.Col(pie_card)
+                ]
+                )
+            ], style= {'padding-left' : 60, 'padding-right' : 60},
         ),
     ]
 )
@@ -199,6 +213,16 @@ def update_e4_summary(data_type, date, start, end):
     return [summary_card(round(_avg, 3), data_type, 'average'),
             summary_card(round(_min, 3), data_type, 'min'),
             summary_card(round(_max, 3), data_type, 'max')]
+
+@app.callback(
+    Output("pie_chart","figure"),
+    Input("datepicker","date"),
+    Input("start","value"),
+    Input("end","value"))
+def update_pie(date,start,end):
+    date = datetime.strptime(date, '%Y-%m-%d').date()
+    time_range = [start,end]
+    return pie.create_pie(date,time_range)
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)
