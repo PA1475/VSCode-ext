@@ -24,6 +24,7 @@ class Piechart:
         return df
 
     def create_pie(self,date,time_range):
+        self.df = self.get_df()
         df = self.filter_df(self.df,date,time_range)
         fig = px.pie(df,values = "timestamps", names = "emotions")
         return fig
