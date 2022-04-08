@@ -108,10 +108,14 @@ function activate(context) {
 			case "CE4":
 				displayMessage(message);
 				break;
+			case "SBL":
+				displayMessage(message);
+				break;
 			case "ERR":
 				displayMessage(message);
 				break;
 		}
+		console.log(message);
 	}
   
 	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.start_survey', start_survey));
