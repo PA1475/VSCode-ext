@@ -1,3 +1,4 @@
+from ast import In
 from time import time
 import dash
 import os
@@ -26,6 +27,7 @@ graph_card = dcc.Graph(id='eye_tracking_visualization')
 e4_fig = dcc.Graph(id='e4_LineGraph')
 graph_card3 = dcc.Graph(id='eye_tracker_heatmap')
 pie_card = dcc.Graph(id="pie_chart")
+pie_summary = dcc.Graph(id="pie_summary")
 header = dbc.Row(
             dbc.Container(
                 [
@@ -47,6 +49,9 @@ E4description_p1 = """Blood Volume Pulse (BVP) is the change of blood volume in 
 
 E4description_p2 = """Blood Volume Pulse (BVP) is the change of blood volume in the microvascular bed of tissue. 
                     This is used to generate the heart rate. However, compared to the heart rate, BVP has a higher frequency and more precision."""
+
+Pie_desciption_p1 = """ With the data collected from the e4 wristband and a neural network we have tried to preticted an users moods."""
+Pie_desciption_p2 = """ The Pie shows the summary of emotions during the given time range"""
 
 time_labels = [{'label':f'{i:02}:00', 'value':i} for i in range(0, 24, 2)]
 
@@ -116,6 +121,32 @@ E4ColumnPicker = dbc.Col(
     style={'padding' : 30,'width' : '24rem'}
 )
 
+Pie_info = dbc.Row([
+    dbc.Col([
+        html.Div([
+            html.Div(
+                html.P([
+                    Pie_desciption_p1,
+                    html.Br(),html.Br(),
+                    Pie_desciption_p2,
+                    html.Br(),html.Br(),
+                    "Red : Tense",
+                    html.Br(),html.Br(),
+                    "Blue : Calm",
+                    html.Br(),html.Br(),
+                    "Purple : Fatigued",
+                    html.Br(),html.Br(),
+                    "Green : Excited"
+                    ], style={'color' : '#353535', 'margin-top': 20})
+                )]
+            )
+    ]),
+    dbc.Col(
+        pie_card
+    )
+    ])
+
+
 E4Graph = dbc.Col([e4_fig], width=6)
 E4Summary = dbc.Col([html.Div(children=[], id='summary', style={'padding' : 10, 'align' : 'right'})], align='right', width=2)
 
@@ -154,13 +185,8 @@ app.layout = html.Div(
                 ,dbc.Col(
                     graph_card3, width=5)
                 ], justify="center"),
-
-            dbc.Row(
-                [dbc.Col(
-                    html.H2("Daily Summary")),
-                dbc.Col(pie_card)
-                ]
-                )
+            html.H2("Daily Summary"),
+            Pie_info
             ], style= {'padding-left' : 60, 'padding-right' : 60},
         ),
     ]
@@ -223,6 +249,8 @@ def update_pie(date,start,end):
     date = datetime.strptime(date, '%Y-%m-%d').date()
     time_range = [start,end]
     return pie.create_pie(date,time_range)
+
+
 
 if __name__ == '__main__':
     app.run_server(host='localhost', debug=True)

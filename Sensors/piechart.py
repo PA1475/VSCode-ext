@@ -28,4 +28,13 @@ class Piechart:
         fig = px.pie(df,values = "timestamps", names = "emotions")
         return fig
 
+    def summary(self,date,time_range):
+        df = self.filter_df(self.df,date,time_range)
+        temp_mood = {}
+        amount = df["emotions"].value_counts()
+        temp_mood["Relaxed"] = amount[4]/6
+        temp_mood["Fatigued"] = amount[3]/6
+        temp_mood["Excited"] = amount[2]/6
+        temp_mood["Tense"] = amount[1]/6
+        return temp_mood
 
