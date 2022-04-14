@@ -88,6 +88,11 @@ function activate(context) {
 				complete_msg = "ACT SRVY " + result;
 				client.write(to_msg(complete_msg));
 				break;
+			case "BRK":
+                if (data_arr[1] == "take_break") {
+	                vscode.window.showInformationMessage("Maybee its time to take a break? ☕️");
+                }
+				break;
 			case "ESTM":
 				let pred_index = parseInt(data_arr[1]);
 				let pred_certainty = data_arr[2];
@@ -184,6 +189,10 @@ async function show_survey() {
 			break;
 	}
 	return result;
+}
+
+async function show_break_message() {
+	vscode.window.showInformationMessage("Maybee its time to take a break? ☕️);
 }
 
 
