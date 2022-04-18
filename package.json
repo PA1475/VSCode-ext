@@ -36,10 +36,6 @@
 			{
 				"title" : "Server",
 				"properties": {
-					"emotionawareide.server.status" : {
-						"order" : 1,
-						"description" : "Server status: connected"
-					},
 					"emotionawareide.server.port": {
 						"order" : 2,
 						"type": "integer",
@@ -71,9 +67,6 @@
 			{
 				"title":"Eye Tracker",
 				"properties": {
-					"emotionawareide.eye.status" : {
-						"description": "Eye tracker status: "
-					},
 					"emotionawareide.eye.port" : {
 						"type": "integer",
 						"default": 4242,
