@@ -28,16 +28,68 @@
 				"title": "Start Survey"
 			}
 		],
-		"configuration": {
-			"title": "EmotionAwareIDE",
-			"properties": {
-				"emotionawareide.port": {
-					"type": "number",
-					"default": 1337,
-					"description": "The port used for receiving data."
+		"configuration": [
+			{
+			"id" : "EmotionAwareIDE",
+			"title": "EmotionAwareIDE"
+			},
+			{
+				"title" : "Server",
+				"properties": {
+					"emotionawareide.server.status" : {
+						"order" : 1,
+						"description" : "Server status: connected"
+					},
+					"emotionawareide.server.port": {
+						"order" : 2,
+						"type": "integer",
+						"default": 1337,
+						"description": "The port used for receiving data."
+					}
 				}
-			}	
-		}
+			},
+			{
+				"title":"E4",
+				"description" : "Description",
+				"properties": {
+					"emotionawareide.e4.port" : {
+						"type": "integer",
+						"default": 8080,
+						"description": "The port used for transmission of E4 data."
+					},
+					"emotionawareide.e4.wristbands" : {
+						"type" : "string",
+						"default" : "addr1",
+						"enum" : ["addr1", "addr2"],
+						"enumDescriptions" : [
+							"Chose to connect to the E4 wristband with this address.",
+							"Chose to connect to the E4 wristband with this address."
+						]
+					}
+				}
+			},
+			{
+				"title":"Eye Tracker",
+				"properties": {
+					"emotionawareide.eye.status" : {
+						"description": "Eye tracker status: "
+					},
+					"emotionawareide.eye.port" : {
+						"type": "integer",
+						"default": 4242,
+						"description": "The port used for transmission of Eyetracker data."
+					}
+				}
+			},
+			{
+				"title" : "Actions",
+				"properties": {
+					"emotionawareide.action.baseActions" : {
+						"type" : "object"
+					}
+				}
+			}
+		]
 	},
 	"scripts": {
 		"lint": "eslint .",

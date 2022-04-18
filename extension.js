@@ -1,10 +1,10 @@
+
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 //const { once } = require('events');
 const vscode = require('vscode');
 const net = require('net');
 const { write } = require('fs');
-
 
 let statusbar_item;
 
@@ -65,21 +65,38 @@ function activate(context) {
 		return emoji;
 	}
 
-	async function handle_actions(data_arr)
+	function emoji_to_emotion(emoji)
+	{
+		let emotion = 0;
+		switch(emoji)
+		{
+			case "😰":
+				emotion = 1;
+				break;
+			case "😃":
+				emotion = 2;
+				break;
+			case "😞":
+				emotion = 3;
+				break;
+			case "😐":
+				emotion = 4;
+				break;
+		}
+		return emotion;
+	}
+
+	async function handle_actions(act_data)
 	{
 		let complete_msg = "";
-		switch (data_arr[0])
+		let sep = act_data.search(" ");
+		let act_name = act_data.substring(0, sep);
+		switch (act_name)
 		{
 			case "TEST":
-				let msg = ""
-				for (let i = 0; i < data_arr.lenght; i++)
-				{
-					msg += data_arr[i] + " "
-				}
 				let message = await vscode.window.showInputBox({
 					placeHolder : "Write response to TEST"
 				});
-				await displayMessage(msg);
 				complete_msg = "ACT TEST " + message;
 				client.write(to_msg(complete_msg));
 				break;
@@ -89,6 +106,7 @@ function activate(context) {
 				client.write(to_msg(complete_msg));
 				break;
 			case "ESTM":
+				let data_arr = act_data.split(" ");
 				let pred_index = parseInt(data_arr[1]);
 				let pred_certainty = data_arr[2];
 				complete_msg = `I believe you are: ${emotion_to_emoji(pred_index)}, with ${pred_certainty}% certainty.`;
@@ -100,10 +118,11 @@ function activate(context) {
 
 	function handle_data(data){
 		let message = data.toString();
-		let cmd_array = message.split(" ");
-		switch (cmd_array[0]){
+		let sep = message.search(" ");
+		let cmd = message.substring(0, sep);
+		switch (cmd){
 			case "ACT":
-				handle_actions(cmd_array.slice(1, cmd_array.length));
+				handle_actions(message.substring(sep+1, message.lenght));
 				break;
 			case "CE4":
 				displayMessage(message);
@@ -127,7 +146,7 @@ function activate(context) {
 	statusbar_item.show();
 
 	// port used for communication
-	const port1 = vscode.workspace.getConfiguration('emotionawareide').get('port');
+	const port1 = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
 	console.log(port1);
 
 	// initialize client
@@ -168,36 +187,8 @@ function show_web_view() {
 
 async function show_survey() {
 	res_mood = await vscode.window.showInformationMessage("How are you feeling?", "😰", "😞", "😐", "😃");
-	let result = 0;
-	switch (res_mood){
-		case "😰":
-			result = 1;
-			break;
-		case "😃":
-			result = 2;
-			break;
-		case "😞":
-			result = 3;
-			break;
-		case "😐":
-			result = 4;
-			break;
-	}
+	let result = emoji_to_emotion(res_mood);
 	return result;
-}
-
-
-function start_survey() {
-	vscode.window.showInputBox({
-		label: "User ID",
-		placeHolder: "User ID"
-	}).then( (res_id) => {
-		setInterval( () => {
-			vscode.window.showInformationMessage("How are you feeling?", "😃", "😥", "👿", "😰").then( (res_mood) => {
-				vscode.window.showInformationMessage(res_id+": "+res_mood);
-			});
-		}, 300000);
-	});
 }
 
 
