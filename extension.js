@@ -274,6 +274,19 @@ function convert_message(data) {
 	str += "Valence: " + valence + ", Certanty: " + String(byteToFloat(data.slice(14, 18)));
 	return str;
 }
+function getVisibleText() {
+    // finds top and bottom lines currently visible on texteditor
+
+    visRanges = vscode.window.activeTextEditor.visibleRanges;
+    low = visRanges[0]["_start"]["_line"]
+    high = visRanges[0]["_end"]["_line"]
+    console.log("Current top line " + low);
+    console.log("Current bottom line " + high);
+    const range = new vscode.Range(low, 0, high, 0);
+    const ranges = vscode.window.activeTextEditor.document.getText(range)
+    const stuckText = vscode.window.activeTextEditor.document.fileName;
+    vscode.window.showInformationMessage(stuckText,ranges);
+}
 
 
 function byteToFloat(data) {
