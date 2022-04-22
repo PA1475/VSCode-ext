@@ -24,8 +24,12 @@
 				"title": "Show message"
 			},
 			{
-				"command": "emotionawareide.start_survey",
-				"title": "Start Survey"
+				"command": "emotionawareide.connect_eyetracker",
+				"title": "Connect Eyetracker"
+			},
+			{
+				"command": "emotionawareide.connect_server",
+				"title": "Connect Server"
 			}
 		],
 		"configuration": [
@@ -52,15 +56,6 @@
 						"type": "integer",
 						"default": 8080,
 						"description": "The port used for transmission of E4 data."
-					},
-					"emotionawareide.e4.wristbands" : {
-						"type" : "string",
-						"default" : "addr1",
-						"enum" : ["addr1", "addr2"],
-						"enumDescriptions" : [
-							"Chose to connect to the E4 wristband with this address.",
-							"Chose to connect to the E4 wristband with this address."
-						]
 					}
 				}
 			},
@@ -78,7 +73,9 @@
 				"title" : "Actions",
 				"properties": {
 					"emotionawareide.action.baseActions" : {
-						"type" : "object"
+						"type" : "boolean",
+						"default" : false,
+						"description": "Basic actions such as recurrent mood calculation and stuck detection."
 					}
 				}
 			}
