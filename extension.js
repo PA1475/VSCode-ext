@@ -65,26 +65,6 @@ function activate(context) {
 		return emoji;
 	}
 
-	function emoji_to_emotion(emoji)
-	{
-		let emotion = 0;
-		switch(emoji)
-		{
-			case "😰":
-				emotion = 1;
-				break;
-			case "😃":
-				emotion = 2;
-				break;
-			case "😞":
-				emotion = 3;
-				break;
-			case "😐":
-				emotion = 4;
-				break;
-		}
-		return emotion;
-	}
 
 	async function handle_actions(act_data)
 	{
@@ -183,6 +163,27 @@ function show_web_view() {
 
 	// gets the html to display
 	panel.webview.html = getWebviewContent();
+}
+
+function emoji_to_emotion(emoji)
+{
+	let emotion = 0;
+	switch(emoji)
+	{
+		case "😰":
+			emotion = 1;
+			break;
+		case "😃":
+			emotion = 2;
+			break;
+		case "😞":
+			emotion = 3;
+			break;
+		case "😐":
+			emotion = 4;
+			break;
+	}
+	return emotion;
 }
 
 async function show_survey() {
