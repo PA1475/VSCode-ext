@@ -96,9 +96,10 @@ function activate(context) {
 	function server_setup () {
 		client.write(to_msg("SBL"))
 	}
+	connect_to_server();
 	function connect_to_server() {
 		const server_port = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
-
+		console.log(server_port);
 		// connect client
 		try{
 			client.connect(server_port, '127.0.0.1', () => {
