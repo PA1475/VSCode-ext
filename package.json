@@ -34,8 +34,8 @@
 		],
 		"configuration": [
 			{
-			"id" : "EmotionAwareIDE",
-			"title": "EmotionAwareIDE"
+				"id" : "EmotionAwareIDE",
+				"title": "EmotionAwareIDE"
 			},
 			{
 				"title" : "Server",
@@ -72,10 +72,25 @@
 			{
 				"title" : "Actions",
 				"properties": {
-					"emotionawareide.action.baseActions" : {
+					"emotionawareide.action.survey" : {
 						"type" : "boolean",
 						"default" : false,
-						"description": "Basic actions such as recurrent mood calculation and stuck detection."
+						"description": "Poll the user for mood, this data will be used to train the AI."
+					},
+					"emotionawareide.action.estimate" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Estimates the users mood during the session."
+					},
+					"emotionawareide.action.takeBreak" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Notifies the user when to take a break"
+					},
+					"emotionawareide.action.stuck" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Notifies the user when they have gotten stuck on a piece of code."
 					}
 				}
 			}

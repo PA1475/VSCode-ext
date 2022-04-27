@@ -5,6 +5,7 @@
 const vscode = require('vscode');
 const net = require('net');
 const { write } = require('fs');
+const { privateEncrypt } = require('crypto');
 
 let statusbar_item;
 let e4_statusbar;
@@ -93,33 +94,35 @@ function activate(context) {
 	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.connect_e4', connect_e4));
 	
 
-	function server_setup () {
-		client.write(to_msg("SBL"))
-	}
 	function connect_to_server() {
-		const server_port = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
-
-		// connect client
-		try{
-			client.connect(server_port, '127.0.0.1', () => {
-				console.log('Connected');
-				server_connected = true;
-				server_setup();
-			});
-	
-			// on data received run function
-			client.on('data', (data) => {
-					handle_data(data);
-			});
-		} catch (error){
-			server_connected = false;
-			displayMessage(
-				"Could not connect to server. Make sure the " +
-				"server process is on and the port is correct.")
+		if (!server_connected) {
+			const server_port = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
+			let could_connect = false;
+			try{
+				client.connect(server_port, '127.0.0.1', () => {
+					console.log('Connected');
+					could_connect = true;
+					console.log(could_connect);
+					client.write(to_msg("SBL"));
+				});
+		
+				// on data received run function
+				client.on('data', (data) => {
+						handle_data(data);
+				});
+			} catch (error){
+				could_connect = false;
+			}
+			if (!could_connect)
+			{
+				displayMessage(
+					"Could not connect to server. Make sure the " +
+					"server process is on and the port is correct.");
+			}
 		}
 	}
 	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.connect_server', connect_to_server));
-
+	connect_to_server();
 
 	function to_msg(msg) {
 		return msg +"\t\n";
@@ -291,6 +294,52 @@ function activate(context) {
 	// 		handle_data(data);
 	// });
 
+
+	vscode.workspace.onDidChangeConfiguration((e) => {
+		if (e.affectsConfiguration("emotionawareide.server.port")) {
+			connect_to_server();
+		} 
+		else if (e.affectsConfiguration("emotionawareide.e4.port")) {
+			connect_e4();
+		}
+		else if (e.affectsConfiguration("emotionawareide.eye.port")) {
+			connect_eyetracker();
+		}
+		else if (e.affectsConfiguration("emotionawareide.action.survey")) {
+			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.survey");
+			let server_msg = "DACT SRVY";
+			if (toggled){
+				server_msg += "AACT SRVY";
+			}
+			client.write(to_msg(server_msg));
+		}
+		else if (e.affectsConfiguration("emotionawareide.action.estimate")) {
+			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.estimate");
+			let server_msg = "DACT ESTM";
+			if (toggled){
+				server_msg += "AACT ESTM";
+			}
+			client.write(to_msg(server_msg));
+		}
+		else if (e.affectsConfiguration("emotionawareide.action.takeBreak")) {
+			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.takeBreak");
+			let server_msg = "DACT BRK";
+			if (toggled){
+				server_msg += "AACT BRK";
+			}
+			client.write(to_msg(server_msg));
+		}
+		else if (e.affectsConfiguration("emotionawareide.action.stuck")) {
+			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.stuck");
+			let server_msg = "DACT STUCK";
+			if (toggled){
+				server_msg += "AACT STUCK";
+			}
+			client.write(to_msg(server_msg));
+		}
+			
+	});
+
 }
 
 
@@ -313,26 +362,6 @@ function show_web_view() {
 	// gets the html to display
 	panel.webview.html = getWebviewContent();
 }
-function emoji_to_emotion(emoji)
-	{
-		let emotion = 0;
-		switch(emoji)
-		{
-			case "😰":
-				emotion = 1;
-				break;
-			case "😃":
-				emotion = 2;
-				break;
-			case "😞":
-				emotion = 3;
-				break;
-			case "😐":
-				emotion = 4;
-				break;
-		}
-		return emotion;
-	}
 
 function emoji_to_emotion(emoji)
 {
@@ -367,13 +396,6 @@ function displayMessage(message) {
 	vscode.window.showInformationMessage(message);
 }
 
-
-vscode.workspace.onDidChangeConfiguration((e) => {
-	console.log(e.affectsConfiguration("emotionawareide.server.port"));
-	if (e.affectsConfiguration("emotionawareide.server.port"))
-		connect_to_server()
-		
-});
 
 
 function getWebviewContent() {
