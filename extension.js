@@ -89,9 +89,11 @@ function activate(context) {
 				client.write(to_msg(complete_msg));
 				break;
 			case "BRK":
-                if (data_arr[1] == "take_break") {
-	                vscode.window.showInformationMessage("Maybee its time to take a break? ☕️");
-                }
+				if (data_arr[1] == "take_break") {
+					vscode.window.showInformationMessage("Maybee its time to take a break? ☕️");
+				} else {
+					vscode.window.showInformationMessage("Continue working!");
+				}
 				break;
 			case "ESTM":
 				let pred_index = parseInt(data_arr[1]);
