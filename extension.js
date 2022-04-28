@@ -168,6 +168,13 @@ function activate(context) {
 				complete_msg = "ACT SRVY " + result;
 				client.write(to_msg(complete_msg));
 				break;
+			case "BRK":
+				if (data_arr[1] == "take_break") {
+					vscode.window.showInformationMessage("Maybee its time to take a break? ☕️");
+				} else {
+					vscode.window.showInformationMessage("Continue working!");
+				}
+				break;
 			case "ESTM":
 				let data_arr = act_data.split(" ");
 				let pred_index = parseInt(data_arr[1]);
@@ -435,6 +442,7 @@ function emoji_to_emotion(emoji)
 	}
 	return emotion;
 }
+
 
 async function show_survey() {
 	res_mood = await vscode.window.showInformationMessage("How are you feeling?", "😰", "😞", "😐", "😃");
