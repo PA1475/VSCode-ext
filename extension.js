@@ -1,13 +1,29 @@
+
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 //const { once } = require('events');
 const vscode = require('vscode');
 const net = require('net');
 const { write } = require('fs');
-
+const { privateEncrypt } = require('crypto');
 
 let statusbar_item;
+let e4_statusbar;
+let eye_statusbar;
 
+let server_connected = false;
+let e4_connected = false;
+let eye_connected = false;
+let baseline = false;
+
+SUCCESS_STR = "SUCC"
+FAIL_STR = "FAIL"
+
+
+function displayMessage(message) {
+	// displays message as popup
+	vscode.window.showInformationMessage(message);
+}
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 /**
@@ -25,18 +41,84 @@ function activate(context) {
 	// pushes command to context
 	context.subscriptions.push(disposable);
 
+	var client = new net.Socket();
+	client.on("error", (err) =>{
+		displayMessage("Could not connect to server, check port and try again.")
+	});
+	client.on('data', (data) => {
+		handle_data(data);
+	});
+
 	// pushes command to context
 	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.show_message', async () => {
 
 		// gets message from user input
-		let message = await vscode.window.showInputBox({
-			placeHolder: "Write a message"
-		});
+		if (server_connected)
+		{
+			// runs displaymessage with message
+			// displayMessage(message);
+			let message = await vscode.window.showInputBox({
+				placeHolder: "Write a message"
+			});
+			client.write(to_msg(message));
+		}
 
-		// runs displaymessage with message
-		// displayMessage(message);
-		client.write(to_msg(message));
 	}));
+
+	function connect_eyetracker(){
+		if (server_connected){
+			const eyetracker_port = vscode.workspace.getConfiguration('emotionawareide').get('eye.port');
+			client.write(to_msg(`ONEY ${eyetracker_port.toString()}`));
+		} else 
+		{
+			displayMessage("Server needs to be connected first.")
+			eye_statusbar.text = "$(eye)EYE";
+		}
+	}
+
+	function disconnect_eyetracker(){
+		if (server_connected && eye_connected){
+			client.write(to_msg("OFEY"));
+		}
+	}
+
+	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.connect_eyetracker', connect_eyetracker));
+
+
+	function connect_e4 (){
+		if (server_connected){
+			const e4_port = vscode.workspace.getConfiguration('emotionawareide').get('e4.port');
+			client.write(to_msg(`CE4 ${e4_port.toString()}`));
+		} else {
+			displayMessage("Server needs to be connected first.");
+			e4_statusbar.text = "$(watch)E4";
+		}
+	}
+
+	function disconnect_e4 (){
+		if (server_connected && e4_connected)
+		{
+			client.write(to_msg("DE4"));
+		}
+	}
+	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.connect_e4', connect_e4));
+
+	function connect_to_server() {
+		if (!server_connected) {
+			const server_port = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
+			let could_connect = false;
+			client.connect(server_port, '127.0.0.1', () => {
+				console.log('Connected');
+				could_connect = true;
+				server_connected = true;
+				console.log(could_connect);
+				client.write(to_msg("SBL"));
+			});
+			// on data received run function
+		}
+	}
+	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.connect_server', connect_to_server));
+	connect_to_server();
 
 	function to_msg(msg) {
 		return msg +"\t\n";
@@ -65,30 +147,29 @@ function activate(context) {
 		return emoji;
 	}
 
-	async function handle_actions(data_arr)
+
+	async function handle_actions(act_data)
 	{
 		let complete_msg = "";
-		switch (data_arr[0])
+		let sep = act_data.search(" ");
+		let act_name = act_data.substring(0, sep);
+		switch (act_name)
 		{
 			case "TEST":
-				let msg = ""
-				for (let i = 0; i < data_arr.lenght; i++)
-				{
-					msg += data_arr[i] + " "
-				}
 				let message = await vscode.window.showInputBox({
 					placeHolder : "Write response to TEST"
 				});
-				await displayMessage(msg);
 				complete_msg = "ACT TEST " + message;
 				client.write(to_msg(complete_msg));
 				break;
 			case "SRVY":
 				let result = await show_survey();
+				console.log(result);
 				complete_msg = "ACT SRVY " + result;
 				client.write(to_msg(complete_msg));
 				break;
 			case "ESTM":
+				let data_arr = act_data.split(" ");
 				let pred_index = parseInt(data_arr[1]);
 				let pred_certainty = data_arr[2];
 				complete_msg = `I believe you are: ${emotion_to_emoji(pred_index)}, with ${pred_certainty}% certainty.`;
@@ -98,27 +179,104 @@ function activate(context) {
 		}
 	}
 
+	function servername_to_name(s_name){
+		let name = "";
+		switch (s_name)
+		{
+			case "SRVY":
+				name = "survey";
+				break;
+			case "ESTM":
+				name = "estimate";
+				break;
+			case "BRK" :
+				name = "takeBreak";
+				break;
+			case "STUCK":
+				name = "stuck";
+				break;
+		}
+		return name;
+	}
+
+
 	function handle_data(data){
 		let message = data.toString();
-		let cmd_array = message.split(" ");
-		switch (cmd_array[0]){
+		console.log(message);
+		let sep = message.search(" ");
+		let cmd = message.substring(0, sep);
+		switch (cmd){
 			case "ACT":
-				handle_actions(cmd_array.slice(1, cmd_array.length));
+				handle_actions(message.substring(sep+1, message.length));
 				break;
 			case "CE4":
-				displayMessage(message);
+				message = message.substring(sep+1, message.length);
+				e4_statusbar.text = "$(watch)E4";
+				if (message == FAIL_STR)
+					displayMessage(
+						"Could not connect to E4, check the E4 "+
+						"manager app and port.")
+					else {
+						e4_connected = true;
+						e4_statusbar.color = "#42f551";
+						client.write(to_msg(get_active_actions()));
+					}
+				break;
+			case "DE4":
+				e4_connected = false;
+				e4_statusbar.text = "$(watch)E4";
+				e4_statusbar.color = undefined;
+				displayMessage("E4 disconnected.");
 				break;
 			case "SBL":
-				displayMessage(message);
+				let sbl_data = message.split(' ');
+				if (sbl_data[1] == "SUCC")
+					displayMessage("Baseline set, ready for development.");
+				else {
+					displayMessage("New Baseline needs to be created.")
+				}
+				break;
+			case "ONEY":
+				let oney_str = message.substring(sep+1, message.length);
+				eye_statusbar.text = "$(eye)EYE";
+				if (oney_str == FAIL_STR)
+					displayMessage(
+						"Could not connect to Eyetracker. Make sure "+
+						"GazePoint control is active or the port in "+
+						"settings corresponds to the correct port.");
+				else {
+					eye_connected = true;
+					eye_statusbar.color = "#42f551";
+					client.write(to_msg(get_active_actions()));	
+				}
+				break;
+			case "OFEY":
+				eye_statusbar.text = "$(eye)EYE";
+				eye_connected = false;
+				eye_statusbar.color = undefined;
+				displayMessage("Eyetracker disconnected.");
+				break;
+			case "DACT":
+				let dact_str = message.substring(sep+1, message.length);
+				let dact_cmd = dact_str.split(" ");
+				if (dact_cmd[0] == "FAIL")
+				{
+					for (let i = 1; i < dact_cmd.length; i++)
+					{
+						let name = servername_to_name(dact_cmd[i]);
+						console.log(`actions.${name}`)
+						vscode.workspace.getConfiguration("emotionawareide").update(`actions.${name}`, false);
+					}
+					displayMessage("Could not activate all desired actions.");
+				}
 				break;
 			case "ERR":
 				displayMessage(message);
 				break;
 		}
-		console.log(message);
 	}
   
-	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.start_survey', start_survey));
+	// context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.start_survey', start_survey));
 
 
 	vscode.commands.registerCommand("show_web_view", show_web_view);
@@ -126,21 +284,112 @@ function activate(context) {
 	statusbar_item.command = "show_web_view";
 	statusbar_item.show();
 
+
+	function e4_connection () {
+		console.log(e4_connected);
+		if (e4_connected == false) {
+			e4_statusbar.text = "$(watch)$(sync~spin)"
+			connect_e4();
+		} else {
+			disconnect_e4();
+		}
+	}
+	vscode.commands.registerCommand("e4_connection", e4_connection);
+	e4_statusbar = vscode.window.createStatusBarItem(1,1);
+	e4_statusbar.command = "e4_connection";
+	e4_statusbar.text = "$(watch)E4";
+	e4_statusbar.show();
+
+	function eye_connection (){
+		if (eye_connected == false) {
+			eye_statusbar.text = "$(eye)$(sync~spin)";
+			connect_eyetracker();
+		} else {
+			disconnect_eyetracker();
+		}
+	}
+	vscode.commands.registerCommand("eye_connection", eye_connection);
+	eye_statusbar = vscode.window.createStatusBarItem(1,1);
+	eye_statusbar.command = "eye_connection";
+	eye_statusbar.text = "$(eye)EYE";
+	eye_statusbar.show();
+
 	// port used for communication
-	const port1 = vscode.workspace.getConfiguration('emotionawareide').get('port');
+	const port1 = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
 	console.log(port1);
 
 	// initialize client
-	var client = new net.Socket();
+	// var client = new net.Socket();
 
-	// connect client
-	client.connect(port1, '127.0.0.1', () => {
-		console.log('Connected');
-	});
+	// // connect client
+	// client.connect(port1, '127.0.0.1', () => {
+	// 	console.log('Connected');
+	// });
 
-	// on data received run function
-	client.on('data', (data) => {
-			handle_data(data);
+	// // on data received run function
+	// client.on('data', (data) => {
+	// 		handle_data(data);
+	// });
+
+	function get_active_actions() {
+		let activate_str = "AACT";
+		if (vscode.workspace.getConfiguration("emotionawareide").get("action.survey"))
+			activate_str += " SRVY";
+		if (vscode.workspace.getConfiguration("emotionawareide").get("action.takeBreak"))
+			activate_str += " BRK";
+		if (vscode.workspace.getConfiguration("emotionawareide").get("action.estimate"))
+			activate_str += " ESTM";
+		if (vscode.workspace.getConfiguration("emotionawareide").get("action.stuck"))
+			activate_str += " STUCK";
+		return activate_str;
+	}
+
+	vscode.workspace.onDidChangeConfiguration((e) => {
+		if (e.affectsConfiguration("emotionawareide.server.port")) {
+			console.log(`Connecting ${client.connecting}`);
+		} 
+		if (!server_connected)
+			return;
+
+		if (e.affectsConfiguration("emotionawareide.e4.port")) {
+				connect_e4();
+		}
+		else if (e.affectsConfiguration("emotionawareide.eye.port")) {
+				connect_eyetracker();
+		}
+		else if (e.affectsConfiguration("emotionawareide.action.survey")) {
+			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.survey");
+			let server_msg = "DACT SRVY";
+			if (toggled){
+				server_msg = "AACT SRVY";
+			}
+			client.write(to_msg(server_msg));
+		}
+		else if (e.affectsConfiguration("emotionawareide.action.estimate")) {
+			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.estimate");
+			let server_msg = "DACT ESTM";
+			if (toggled){
+				server_msg = "AACT ESTM";
+			}
+			client.write(to_msg(server_msg));
+		}
+		else if (e.affectsConfiguration("emotionawareide.action.takeBreak")) {
+			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.takeBreak");
+			let server_msg = "DACT BRK";
+			if (toggled){
+				server_msg = "AACT BRK";
+			}
+			client.write(to_msg(server_msg));
+		}
+		else if (e.affectsConfiguration("emotionawareide.action.stuck")) {
+			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.stuck");
+			let server_msg = "DACT STUCK";
+			if (toggled){
+				server_msg = "AACT STUCK";
+			}
+			client.write(to_msg(server_msg));
+		}
+			
 	});
 
 }
@@ -166,45 +415,33 @@ function show_web_view() {
 	panel.webview.html = getWebviewContent();
 }
 
-async function show_survey() {
-	res_mood = await vscode.window.showInformationMessage("How are you feeling?", "😰", "😞", "😐", "😃");
-	let result = 0;
-	switch (res_mood){
+function emoji_to_emotion(emoji)
+{
+	let emotion = 0;
+	switch(emoji)
+	{
 		case "😰":
-			result = 1;
+			emotion = 1;
 			break;
 		case "😃":
-			result = 2;
+			emotion = 2;
 			break;
 		case "😞":
-			result = 3;
+			emotion = 3;
 			break;
 		case "😐":
-			result = 4;
+			emotion = 4;
 			break;
 	}
+	return emotion;
+}
+
+async function show_survey() {
+	res_mood = await vscode.window.showInformationMessage("How are you feeling?", "😰", "😞", "😐", "😃");
+	let result = emoji_to_emotion(res_mood);
 	return result;
 }
 
-
-function start_survey() {
-	vscode.window.showInputBox({
-		label: "User ID",
-		placeHolder: "User ID"
-	}).then( (res_id) => {
-		setInterval( () => {
-			vscode.window.showInformationMessage("How are you feeling?", "😃", "😥", "👿", "😰").then( (res_mood) => {
-				vscode.window.showInformationMessage(res_id+": "+res_mood);
-			});
-		}, 300000);
-	});
-}
-
-
-function displayMessage(message) {
-	// displays message as popup
-	vscode.window.showInformationMessage(message);
-}
 
 
 function getWebviewContent() {
@@ -295,9 +532,15 @@ function byteToFloat(data) {
 
 
 // this method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() {
+	console.log("Shutting down")
+	let END_STREAM = "END END_SERVER";
+	client.write(to_msg(END_STREAM));
+	client.close();
+
+}
 
 module.exports = {
-	activate,
-	deactivate
+activate,
+deactivate
 }
