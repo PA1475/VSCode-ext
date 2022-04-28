@@ -20,6 +20,10 @@ SUCCESS_STR = "SUCC"
 FAIL_STR = "FAIL"
 
 
+function displayMessage(message) {
+	// displays message as popup
+	vscode.window.showInformationMessage(message);
+}
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 /**
@@ -38,6 +42,12 @@ function activate(context) {
 	context.subscriptions.push(disposable);
 
 	var client = new net.Socket();
+	client.on("error", (err) =>{
+		displayMessage("Could not connect to server, check port and try again.")
+	});
+	client.on('data', (data) => {
+		handle_data(data);
+	});
 
 	// pushes command to context
 	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.show_message', async () => {
@@ -92,33 +102,19 @@ function activate(context) {
 		}
 	}
 	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.connect_e4', connect_e4));
-	
 
 	function connect_to_server() {
 		if (!server_connected) {
 			const server_port = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
 			let could_connect = false;
-			try{
-				client.connect(server_port, '127.0.0.1', () => {
-					console.log('Connected');
-					could_connect = true;
-					console.log(could_connect);
-					client.write(to_msg("SBL"));
-				});
-		
-				// on data received run function
-				client.on('data', (data) => {
-						handle_data(data);
-				});
-			} catch (error){
-				could_connect = false;
-			}
-			if (!could_connect)
-			{
-				displayMessage(
-					"Could not connect to server. Make sure the " +
-					"server process is on and the port is correct.");
-			}
+			client.connect(server_port, '127.0.0.1', () => {
+				console.log('Connected');
+				could_connect = true;
+				server_connected = true;
+				console.log(could_connect);
+				client.write(to_msg("SBL"));
+			});
+			// on data received run function
 		}
 	}
 	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.connect_server', connect_to_server));
@@ -168,6 +164,7 @@ function activate(context) {
 				break;
 			case "SRVY":
 				let result = await show_survey();
+				console.log(result);
 				complete_msg = "ACT SRVY " + result;
 				client.write(to_msg(complete_msg));
 				break;
@@ -221,9 +218,9 @@ function activate(context) {
 						"manager app and port.")
 					else {
 						e4_connected = true;
-						e4_statusbar.color = "#009900";
+						e4_statusbar.color = "#42f551";
+						client.write(to_msg(get_active_actions()));
 					}
-				displayMessage(message);
 				break;
 			case "DE4":
 				e4_connected = false;
@@ -232,7 +229,12 @@ function activate(context) {
 				displayMessage("E4 disconnected.");
 				break;
 			case "SBL":
-				displayMessage(message);
+				let sbl_data = message.split(' ');
+				if (sbl_data[1] == "SUCC")
+					displayMessage("Baseline set, ready for development.");
+				else {
+					displayMessage("New Baseline needs to be created.")
+				}
 				break;
 			case "ONEY":
 				let oney_str = message.substring(sep+1, message.length);
@@ -241,10 +243,11 @@ function activate(context) {
 					displayMessage(
 						"Could not connect to Eyetracker. Make sure "+
 						"GazePoint control is active or the port in "+
-						"settings corresponds to the correct port.")
+						"settings corresponds to the correct port.");
 				else {
 					eye_connected = true;
-					eye_statusbar.color = "#009900";
+					eye_statusbar.color = "#42f551";
+					client.write(to_msg(get_active_actions()));	
 				}
 				break;
 			case "OFEY":
@@ -261,13 +264,12 @@ function activate(context) {
 					for (let i = 1; i < dact_cmd.length; i++)
 					{
 						let name = servername_to_name(dact_cmd[i]);
+						console.log(`actions.${name}`)
 						vscode.workspace.getConfiguration("emotionawareide").update(`actions.${name}`, false);
 					}
 					displayMessage("Could not activate all desired actions.");
 				}
-
 				break;
-			
 			case "ERR":
 				displayMessage(message);
 				break;
@@ -284,6 +286,7 @@ function activate(context) {
 
 
 	function e4_connection () {
+		console.log(e4_connected);
 		if (e4_connected == false) {
 			e4_statusbar.text = "$(watch)$(sync~spin)"
 			connect_e4();
@@ -328,10 +331,22 @@ function activate(context) {
 	// 		handle_data(data);
 	// });
 
+	function get_active_actions() {
+		let activate_str = "AACT";
+		if (vscode.workspace.getConfiguration("emotionawareide").get("action.survey"))
+			activate_str += " SRVY";
+		if (vscode.workspace.getConfiguration("emotionawareide").get("action.takeBreak"))
+			activate_str += " BRK";
+		if (vscode.workspace.getConfiguration("emotionawareide").get("action.estimate"))
+			activate_str += " ESTM";
+		if (vscode.workspace.getConfiguration("emotionawareide").get("action.stuck"))
+			activate_str += " STUCK";
+		return activate_str;
+	}
 
 	vscode.workspace.onDidChangeConfiguration((e) => {
 		if (e.affectsConfiguration("emotionawareide.server.port")) {
-			connect_to_server();
+			console.log(`Connecting ${client.connecting}`);
 		} 
 		if (!server_connected)
 			return;
@@ -346,7 +361,7 @@ function activate(context) {
 			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.survey");
 			let server_msg = "DACT SRVY";
 			if (toggled){
-				server_msg += "AACT SRVY";
+				server_msg = "AACT SRVY";
 			}
 			client.write(to_msg(server_msg));
 		}
@@ -354,7 +369,7 @@ function activate(context) {
 			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.estimate");
 			let server_msg = "DACT ESTM";
 			if (toggled){
-				server_msg += "AACT ESTM";
+				server_msg = "AACT ESTM";
 			}
 			client.write(to_msg(server_msg));
 		}
@@ -362,7 +377,7 @@ function activate(context) {
 			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.takeBreak");
 			let server_msg = "DACT BRK";
 			if (toggled){
-				server_msg += "AACT BRK";
+				server_msg = "AACT BRK";
 			}
 			client.write(to_msg(server_msg));
 		}
@@ -370,7 +385,7 @@ function activate(context) {
 			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.stuck");
 			let server_msg = "DACT STUCK";
 			if (toggled){
-				server_msg += "AACT STUCK";
+				server_msg = "AACT STUCK";
 			}
 			client.write(to_msg(server_msg));
 		}
@@ -425,12 +440,6 @@ async function show_survey() {
 	res_mood = await vscode.window.showInformationMessage("How are you feeling?", "😰", "😞", "😐", "😃");
 	let result = emoji_to_emotion(res_mood);
 	return result;
-}
-
-
-function displayMessage(message) {
-	// displays message as popup
-	vscode.window.showInformationMessage(message);
 }
 
 
