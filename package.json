@@ -24,20 +24,77 @@
 				"title": "Show message"
 			},
 			{
-				"command": "emotionawareide.start_survey",
-				"title": "Start Survey"
+				"command": "emotionawareide.connect_eyetracker",
+				"title": "Connect Eyetracker"
+			},
+			{
+				"command": "emotionawareide.connect_server",
+				"title": "Connect Server"
 			}
 		],
-		"configuration": {
-			"title": "EmotionAwareIDE",
-			"properties": {
-				"emotionawareide.port": {
-					"type": "number",
-					"default": 1337,
-					"description": "The port used for receiving data."
+		"configuration": [
+			{
+				"id" : "EmotionAwareIDE",
+				"title": "EmotionAwareIDE"
+			},
+			{
+				"title" : "Server",
+				"properties": {
+					"emotionawareide.server.port": {
+						"order" : 2,
+						"type": "integer",
+						"default": 1337,
+						"description": "The port used for receiving data."
+					}
 				}
-			}	
-		}
+			},
+			{
+				"title":"E4",
+				"description" : "Description",
+				"properties": {
+					"emotionawareide.e4.port" : {
+						"type": "integer",
+						"default": 8080,
+						"description": "The port used for transmission of E4 data."
+					}
+				}
+			},
+			{
+				"title":"Eye Tracker",
+				"properties": {
+					"emotionawareide.eye.port" : {
+						"type": "integer",
+						"default": 4242,
+						"description": "The port used for transmission of Eyetracker data."
+					}
+				}
+			},
+			{
+				"title" : "Actions",
+				"properties": {
+					"emotionawareide.action.survey" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Poll the user for mood, this data will be used to train the AI."
+					},
+					"emotionawareide.action.estimate" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Estimates the users mood during the session."
+					},
+					"emotionawareide.action.takeBreak" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Notifies the user when to take a break"
+					},
+					"emotionawareide.action.stuck" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Notifies the user when they have gotten stuck on a piece of code."
+					}
+				}
+			}
+		]
 	},
 	"scripts": {
 		"lint": "eslint .",
