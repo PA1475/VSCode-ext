@@ -76,31 +76,42 @@
 			{
 				"title" : "Actions",
 				"properties": {
-					"emotionawareide.action.survey" : {
+					"emotionawareide.action.survey.active" : {
 						"type" : "boolean",
 						"default" : false,
 						"description": "Poll the user for mood, this data will be used to train the AI."
 					},
-					"emotionawareide.action.estimate" : {
+					"emotionawareide.action.estimate.active" : {
 						"type" : "boolean",
 						"default" : false,
 						"description": "Estimates the users mood during the session."
 					},
-					"emotionawareide.action.takeBreak" : {
+					"emotionawareide.action.takeBreak.activate" : {
 						"type" : "boolean",
 						"default" : false,
-						"description": "Notifies the user when to take a break"
+						"description": "Notifies the user when to take a break (Check box to activate)."
+					},
+					"emotionawareide.action.takeBreak.time" : {
+						"type" : "number",
+						"default" : 20,
+						"description": "The amount of time, being in a certain mood, before the IDE tells you to take a break. (In minutes)"
+					},
+					"emotionawareide.action.takeBreak.mood" : {
+						"type" : "string",
+						"default" : "😰",
+						"enum" : ["😰","😞", "😰 😞"],
+						"enumDescriptions": [
+							"Take a break when im in the 😰 mood.",
+							"Take a break when im in the 😞 mood.",
+							"Take a break when im in the 😰😞 moods."
+						]
 					},
 					"emotionawareide.action.stuck" : {
 						"type" : "boolean",
 						"default" : false,
 						"description": "Notifies the user when they have gotten stuck on a piece of code."
-					},
-					"emotionawareide.action.stuck.time" : {
-						"type" : "number",
-						"default" : 10,
-						"description": "tja"
 					}
+					
 				}
 			}
 		]
