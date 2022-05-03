@@ -30,6 +30,10 @@
 			{
 				"command": "emotionawareide.connect_server",
 				"title": "Connect Server"
+			},
+			{
+				"command":"emotionawareide.test_communication",
+				"title": "Message Client"
 			}
 		],
 		"configuration": [
@@ -91,10 +95,24 @@
 						"type" : "boolean",
 						"default" : false,
 						"description": "Notifies the user when they have gotten stuck on a piece of code."
+					},
+					"emotionawareide.action.stuck.time" : {
+						"type" : "number",
+						"default" : 10,
+						"description": "tja"
 					}
 				}
 			}
 		]
+	},
+	"imports" : {
+		"#dep": {
+			"node": "emotionawareide",
+			"default": "./emotionawareide.js"
+			}
+	},
+	"dependencies": {
+		"emotionawareide": "^1.0.0"
 	},
 	"scripts": {
 		"lint": "eslint .",
