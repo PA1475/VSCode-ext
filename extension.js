@@ -328,7 +328,7 @@ function activate(context) {
 		client.write(to_msg(server_msg));
 	}, "ESTM");
 
-	emoide.addSettingEvent("action.takeBreak", (active) => {
+	emoide.addSettingEvent("action.takeBreak.activate", (active) => {
 		if (!server_connected)
 			return;
 		
@@ -338,6 +338,32 @@ function activate(context) {
 		}
 		client.write(to_msg(server_msg));
 	}, "BRK");
+
+	emoide.addSettingEvent("action.takeBreak.time", (time) => {
+		if (!server_connected)
+			return;
+		
+		let time_seconds = time*60;
+		let server_msg = `EACT BRK TIME ${time_seconds}`;
+		client.write(to_msg(server_msg))
+	});
+
+	emoide.addSettingEvent("action.takeBreak.mood", (emoji)=>{
+		if (!server_connected)
+			return;
+		
+		const emotion = emoji_to_emotion(emoji);
+		let server_msg = `EACT BRK EMO ${emotion}`;
+		client.write(to_msg(server_msg))
+	});
+
+	emoide.addSettingEvent("action.takeBreak.certainty", (percent) => {
+		if (!server_connected)
+			return;
+		
+		let server_msg = `EACT BRK CERT ${percent}`;
+		client.write(to_msg(server_msg));
+	})
 
 	emoide.addSettingEvent("action.stuck", (active) => {
 		if (!server_connected)

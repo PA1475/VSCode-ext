@@ -99,14 +99,22 @@
 					"emotionawareide.action.takeBreak.mood" : {
 						"type" : "string",
 						"default" : "😰",
-						"enum" : ["😰","😞", "😰 😞"],
+						"enum" : ["😰","😞"],
 						"enumDescriptions": [
 							"Take a break when im in the 😰 mood.",
-							"Take a break when im in the 😞 mood.",
-							"Take a break when im in the 😰😞 moods."
+							"Take a break when im in the 😞 mood."
 						]
 					},
-					"emotionawareide.action.stuck" : {
+					"emotionawareide.action.takeBreak.certainty" : {
+						"type" : "integer",
+						"default" : 80,
+						"minimum": 1,
+						"maximum": 100,
+						"description": "What certainty is required for the take a break action to notify the IDE. (Percentage)"
+
+
+					},
+					"emotionawareide.action.stuck.activate" : {
 						"type" : "boolean",
 						"default" : false,
 						"description": "Notifies the user when they have gotten stuck on a piece of code."
