@@ -52,6 +52,7 @@ function activate(context) {
 	});
 	client.on('data', (data) => {
 		let message = data.toString();
+		console.log(message);
 		emoide.handleData(message);
 	});
 
@@ -98,6 +99,7 @@ function activate(context) {
 
 	function connect_e4 (){
 		if (server_connected){
+			console.log(server_connected);
 			const e4_port = vscode.workspace.getConfiguration('emotionawareide').get('e4.port');
 			client.write(to_msg(`CE4 ${e4_port.toString()}`));
 		} else {
@@ -119,10 +121,10 @@ function activate(context) {
 			const server_port = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
 			let could_connect = false;
 			client.connect(server_port, '127.0.0.1', () => {
-				console.log('Connected');
-				could_connect = true;
 				server_connected = true;
-				console.log(could_connect);
+				could_connect = true;
+				console.log('Connected');
+				emoide.actionSetup();
 				client.write(to_msg("SBL"));
 			});
 			// on data received run function
@@ -198,7 +200,7 @@ function activate(context) {
 		} else {
 			e4_connected = true;
 			e4_statusbar.color = "#42f551";
-			client.write(to_msg(`AACT ${emoide.activeActions}`));
+			emoide.activateActions()
 		}
 	});
 
@@ -230,7 +232,7 @@ function activate(context) {
 		} else {
 			eye_connected = true;
 			eye_statusbar.color = "#42f551";
-			client.write(to_msg(`AACT ${emoide.activeActions}`));	
+			emoide.activateActions();
 		}
 	});
 
@@ -256,7 +258,6 @@ function activate(context) {
 
 
 	function e4_connection () {
-		console.log(e4_connected);
 		if (e4_connected == false) {
 			e4_statusbar.text = "$(watch)$(sync~spin)"
 			connect_e4();
@@ -267,6 +268,7 @@ function activate(context) {
 	vscode.commands.registerCommand("e4_connection", e4_connection);
 	e4_statusbar = vscode.window.createStatusBarItem(1,1);
 	e4_statusbar.command = "e4_connection";
+	e4_statusbar.tooltip = "\n\n\n\n";
 	e4_statusbar.text = "$(watch)E4";
 	e4_statusbar.show();
 
@@ -294,6 +296,7 @@ function activate(context) {
 
 	emoide.addSettingEvent("server.port", (port) => {
 		console.log(`Connecting to ${port}`);
+		connect_to_server();
 	});
 
 	emoide.addSettingEvent("e4.port", (port) => {
@@ -306,7 +309,7 @@ function activate(context) {
 			eye_connection();
 	});
 
-	emoide.addSettingEvent("action.survey", (active) => {
+	emoide.addActivationEvent("action.survey.activate", (active) => {
 		if (!server_connected)
 			return;
 
@@ -315,9 +318,19 @@ function activate(context) {
 			server_msg = "AACT SRVY";
 		}
 		client.write(to_msg(server_msg));
-	}, "SRVY");
+	});
 
-	emoide.addSettingEvent("action.estimate", (active) => {
+	emoide.addEditEvent("action.survey.time", (time) => {		
+		if (!server_connected) {
+			return;
+		}
+
+		let time_seconds = time*60;
+		let server_msg = `EACT SRVY TIME ${time_seconds}`;
+		client.write(to_msg(server_msg));
+	});
+
+	emoide.addActivationEvent("action.estimate.activate", (active) => {
 		if (!server_connected)
 			return;
 		
@@ -326,9 +339,9 @@ function activate(context) {
 			server_msg = "AACT ESTM";
 		}
 		client.write(to_msg(server_msg));
-	}, "ESTM");
+	});
 
-	emoide.addSettingEvent("action.takeBreak.activate", (active) => {
+	emoide.addActivationEvent("action.takeBreak.activate", (active) => {
 		if (!server_connected)
 			return;
 		
@@ -337,9 +350,9 @@ function activate(context) {
 			server_msg = "AACT BRK";
 		}
 		client.write(to_msg(server_msg));
-	}, "BRK");
+	});
 
-	emoide.addSettingEvent("action.takeBreak.time", (time) => {
+	emoide.addEditEvent("action.takeBreak.time", (time) => {
 		if (!server_connected)
 			return;
 		
@@ -348,7 +361,7 @@ function activate(context) {
 		client.write(to_msg(server_msg))
 	});
 
-	emoide.addSettingEvent("action.takeBreak.mood", (emoji)=>{
+	emoide.addEditEvent("action.takeBreak.mood", (emoji)=>{
 		if (!server_connected)
 			return;
 		
@@ -357,15 +370,16 @@ function activate(context) {
 		client.write(to_msg(server_msg))
 	});
 
-	emoide.addSettingEvent("action.takeBreak.certainty", (percent) => {
+	emoide.addEditEvent("action.takeBreak.certainty", (percent) => {
 		if (!server_connected)
 			return;
 		
-		let server_msg = `EACT BRK CERT ${percent}`;
+		let decimal_form = percent / 100;
+		let server_msg = `EACT BRK CERT ${decimal_form}`;
 		client.write(to_msg(server_msg));
 	})
 
-	emoide.addSettingEvent("action.stuck", (active) => {
+	emoide.addActivationEvent("action.stuck.activate", (active) => {
 		if (!server_connected)
 			return;
 		
@@ -374,7 +388,14 @@ function activate(context) {
 			server_msg = "AACT STUCK";
 		}
 		client.write(to_msg(server_msg));
-	}, "STUCK");
+	});
+
+	emoide.addEditEvent("action.stuck.time", (time) => {
+		if (!server_connected)
+			return;
+		let server_msg = `EACT STUCK TIME ${time}`;
+		client.write(to_msg(server_msg));
+	});
 
 
 	vscode.workspace.onDidChangeConfiguration((e) => {
@@ -424,6 +445,7 @@ function emoji_to_emotion(emoji)
 	}
 	return emotion;
 }
+
 
 async function show_survey() {
 	res_mood = await vscode.window.showInformationMessage("How are you feeling?", "😰", "😞", "😐", "😃");

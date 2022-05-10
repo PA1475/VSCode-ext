@@ -4,22 +4,26 @@ class EmotionAwareIDE {
 	constructor() {
 		this.server_commands = {};
 		this.action_commands = {};
-		this.user_settings = {};
+		this.setting_event = {};
+		this.activation_event = {};
+		this.edit_event = {};
 	}
 
-	get activeActions() {
-		let EID = "emotionawareide"
-		let active_actions = "";
-		for (const key in this.user_settings) {
-			if (vscode.workspace.getConfiguration(EID).get(key) == true) {
-				if (this.user_settings[key]["act"] != undefined) {
-					if (active_actions != "")
-						active_actions += " ";
-					active_actions += this.user_settings[key]["act"]
-				}
+	activateActions() {
+		let EID = "emotionawareide";
+		for (const key in this.activation_event) {
+			if (vscode.workspace.getConfiguration(EID).get(key)) {
+				this.activation_event[key](true);
 			}
 		}
-		return active_actions;
+	}
+
+	actionSetup() {
+		let EID = "emotionawareide";
+		for (const key in this.edit_event) {
+			let parameter = vscode.workspace.getConfiguration(EID).get(key);
+			this.edit_event[key](parameter);
+		}
 	}
 
 	addServerCommand(cmd_name, func) {
@@ -32,10 +36,20 @@ class EmotionAwareIDE {
 		this.action_commands[action_name] = func;
 	}
 
-	addSettingEvent(setting_name, func, act=undefined) {
+	addSettingEvent(setting_name, func) {
+		this.setting_event[setting_name] = func;
+	}
+
+	addActivationEvent(setting_name, func) {
 		// settings_name is same name as given in package.json
 		// (Excluding emotionawareide), action is the same as in server
-		this.user_settings[setting_name] = {"func" : func, "act" : act};
+		this.setting_event[setting_name] = func;
+		this.activation_event[setting_name] = func;
+	}
+
+	addEditEvent(setting_name, func) {
+		this.setting_event[setting_name] = func;
+		this.edit_event[setting_name] = func;
 	}
 
 	async handleAction(data_str) {
@@ -71,9 +85,9 @@ class EmotionAwareIDE {
 	}
 
 	onSettingChange(e) {
-		for (const key in this.user_settings){
+		for (const key in this.setting_event){
 			if (e.affectsConfiguration("emotionawareide."+key)){
-				this.user_settings[key]["func"](
+				this.setting_event[key](
 					vscode.workspace.getConfiguration("emotionawareide").get(key)
 				);
 				break;
