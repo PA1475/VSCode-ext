@@ -7,7 +7,7 @@ const net = require('net');
 const { write } = require('fs');
 const { privateEncrypt } = require('crypto');
 
-const GIT_HOOK_SCRIPT = "#!/bin/sh\nFILE=$1\nMESSAGE=$(cat $1)\nlines=`wc -l .git/logs/HEAD | awk '{print $1;}'`\nAUTHOR=`git config user.name`\nTIMESTAMP=`git log --author=\"$AUTHOR\" -1 --format=%ct`\nINPUT=\"emotions.csv.tmp\"\ncurl -o $INPUT \"127.0.0.1:8050/assets/emotions.csv\" 2>/dev/null\nTMP=(0 0 0 0)\nwhile IFS=\",\" read -r TIME EMOT\ndo\nTMP1=${EMOT%.*}\nTMP2=${TIME%.*}\nif [ \"$TMP1\" != \"emotions\" ]\nthen\nif [ $TMP2 -gt $TIMESTAMP ]\nthen\n((TMP[(($TMP1-1))]++))\nfi\nfi\ndone < $INPUT\nBIG=${TMP[0]}\nINDEX=0\nSUM=0\nfor i in {0..3}\ndo\nSUM=$((TMP[$i]+$SUM))\nif [ ${TMP[$i]} -gt $BIG ]\nthen\nBIG=${TMP[$i]}\nINDEX=$i\nfi\ndone\nrm $INPUT\nEMOTION=\" \"\nif [ $INDEX = 0 ]\nthen\nEMOTION=\"😰\"\nfi\nif [ $INDEX = 1 ]\nthen\nEMOTION=\"😃\"\nfi\nif [ $INDEX = 2 ]\nthen\nEMOTION=\"😞\"\nfi\nif [ $INDEX = 3 ]\nthen\nEMOTION=\"😐\"\nfi\nCERT=$((100 * $BIG/$SUM))\necho \"$MESSAGE\n\n$EMOTION $CERT%\" > $FILE"
+const GIT_HOOK_SCRIPT = "#!/bin/sh\nFILE=$1\nMESSAGE=$(cat $1)\nlines=`wc -l .git/logs/HEAD | awk '{print $1;}'`\nAUTHOR=`git config user.name`\nTIMESTAMP=`git log --author=\"$AUTHOR\" -1 --format=%ct`\nINPUT=\"emotions.csv.tmp\"\ncurl -o $INPUT \"127.0.0.1:8050/assets/emotions.csv\" 2>/dev/null\nLOCATION=`curl \"127.0.0.1:8050/assets/location\" 2>/dev/null`\n\ndate +%s > \"$LOCATION/time\"\nTMP=(0 0 0 0)\nwhile IFS=\",\" read -r TIME EMOT\ndo\nTMP1=${EMOT%.*}\nTMP2=${TIME%.*}\nif [ \"$TMP1\" != \"emotions\" ]\nthen\nif [ $TMP2 -gt $TIMESTAMP ]\nthen\n((TMP[(($TMP1-1))]++))\nfi\nfi\ndone < $INPUT\nBIG=${TMP[0]}\nINDEX=0\nSUM=0\nfor i in {0..3}\ndo\nSUM=$((TMP[$i]+$SUM))\nif [ ${TMP[$i]} -gt $BIG ]\nthen\nBIG=${TMP[$i]}\nINDEX=$i\nfi\ndone\nrm $INPUT\nEMOTION=\" \"\nif [ $INDEX = 0 ]\nthen\nEMOTION=\"😰\"\nfi\nif [ $INDEX = 1 ]\nthen\nEMOTION=\"😃\"\nfi\nif [ $INDEX = 2 ]\nthen\nEMOTION=\"😞\"\nfi\nif [ $INDEX = 3 ]\nthen\nEMOTION=\"😐\"\nfi\nCERT=$((100 * $BIG/$SUM))\necho \"$MESSAGE\n\n$EMOTION $CERT%\" > $FILE"
 
 let statusbar_item;
 let e4_statusbar;
@@ -29,6 +29,9 @@ function displayMessage(message) {
 
 
 async function addGitHook() {
+	if (vscode.workspace.workspaceFolders == undefined) {
+		return;
+	}
 	let rootFolder = vscode.workspace.workspaceFolders[0].uri;
 	let gitfolder = vscode.Uri.joinPath(rootFolder, ".git");
 	try {
@@ -204,8 +207,7 @@ function activate(context) {
 				let pred_index = parseInt(data_arr[1]);
 				let pred_certainty = data_arr[2];
 				complete_msg = `I believe you are: ${emotion_to_emoji(pred_index)}, with ${pred_certainty}% certainty.`;
-				update_statusbar_label(emotion_to_emoji(pred_index));
-				displayMessage(complete_msg);
+				update_statusbar_label(emotion_to_emoji(pred_index)+" "+pred_certainty+"%");
 				break;
 		}
 	}
@@ -313,6 +315,7 @@ function activate(context) {
 	vscode.commands.registerCommand("show_web_view", show_web_view);
 	statusbar_item = vscode.window.createStatusBarItem(1, 1);
 	statusbar_item.command = "show_web_view";
+	statusbar_item.text = "-"
 	statusbar_item.show();
 
 
