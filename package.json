@@ -87,7 +87,7 @@
 					"emotionawareide.action.survey.time" : {
 						"type" : "integer",
 						"default" : 5,
-						"minimum": 1,
+						"minimum": 0,
 						"description": "How often should the survey be polled. (minutes)"
 					},
 					"emotionawareide.action.estimate.activate" : {
