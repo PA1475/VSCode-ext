@@ -6,6 +6,9 @@ const vscode = require('vscode');
 const net = require('net');
 const { write } = require('fs');
 const { privateEncrypt } = require('crypto');
+const EmotionAwareIDE = require('./emotionawareide.js');
+
+let emoide =  new EmotionAwareIDE();
 
 let statusbar_item;
 let e4_statusbar;
@@ -18,6 +21,8 @@ let baseline = false;
 
 SUCCESS_STR = "SUCC"
 FAIL_STR = "FAIL"
+
+
 
 
 function displayMessage(message) {
@@ -46,7 +51,9 @@ function activate(context) {
 		displayMessage("Could not connect to server, check port and try again.")
 	});
 	client.on('data', (data) => {
-		handle_data(data);
+		let message = data.toString();
+		console.log(message);
+		emoide.handleData(message);
 	});
 
 	// pushes command to context
@@ -83,10 +90,16 @@ function activate(context) {
 	}
 
 	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.connect_eyetracker', connect_eyetracker));
-
+	context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.test_communication', async () => {
+		let message = await vscode.window.showInputBox({
+			placeHolder: "Write a message"
+		});
+		emoide.handleData(message);
+	}))
 
 	function connect_e4 (){
 		if (server_connected){
+			console.log(server_connected);
 			const e4_port = vscode.workspace.getConfiguration('emotionawareide').get('e4.port');
 			client.write(to_msg(`CE4 ${e4_port.toString()}`));
 		} else {
@@ -108,10 +121,10 @@ function activate(context) {
 			const server_port = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
 			let could_connect = false;
 			client.connect(server_port, '127.0.0.1', () => {
-				console.log('Connected');
-				could_connect = true;
 				server_connected = true;
-				console.log(could_connect);
+				could_connect = true;
+				console.log('Connected');
+				emoide.actionSetup();
 				client.write(to_msg("SBL"));
 			});
 			// on data received run function
@@ -147,144 +160,96 @@ function activate(context) {
 		return emoji;
 	}
 
+	emoide.addActionCommand("TEST", async (message) => {
+		let response = await vscode.window.showInputBox({
+			placeHolder : "Write response to TEST"
+		});
+		complete_resp = "ACT TEST " + response;
+		displayMessage(complete_resp);
+		client.write(to_msg(complete_resp));
+	});
 
-	async function handle_actions(act_data)
-	{
-		let complete_msg = "";
-		let sep = act_data.search(" ");
-		let act_name = act_data.substring(0, sep);
-		switch (act_name)
-		{
-			case "TEST":
-				let message = await vscode.window.showInputBox({
-					placeHolder : "Write response to TEST"
-				});
-				complete_msg = "ACT TEST " + message;
-				client.write(to_msg(complete_msg));
-				break;
-			case "SRVY":
-				let result = await show_survey();
-				console.log(result);
-				complete_msg = "ACT SRVY " + result;
-				client.write(to_msg(complete_msg));
-				break;
-			case "BRK":
-				if (data_arr[1] == "take_break") {
-					vscode.window.showInformationMessage("Maybee its time to take a break? ☕️");
-				} else {
-					vscode.window.showInformationMessage("Continue working!");
-				}
-				break;
-			case "ESTM":
-				let data_arr = act_data.split(" ");
-				let pred_index = parseInt(data_arr[1]);
-				let pred_certainty = data_arr[2];
-				complete_msg = `I believe you are: ${emotion_to_emoji(pred_index)}, with ${pred_certainty}% certainty.`;
-				update_statusbar_label(emotion_to_emoji(pred_index));
-				displayMessage(complete_msg);
-				break;
+	emoide.addActionCommand("SRVY", async (message) => {
+		let result = await show_survey();
+		console.log(result);
+		complete_msg = "ACT SRVY " + result;
+		client.write(to_msg(complete_msg));
+	});
+
+	emoide.addActionCommand("ESTM", async (message) => {
+		let data_arr = message.split(" ");
+		let pred_index = parseInt(data_arr[0]);
+		let pred_certainty = data_arr[1];
+		complete_msg = `I believe you are: ${emotion_to_emoji(pred_index)}, with ${pred_certainty}% certainty.`;
+		update_statusbar_label(emotion_to_emoji(pred_index));
+		displayMessage(complete_msg);
+	});
+
+	emoide.addServerCommand("ERR", (message) => {
+		displayMessage(message);
+	})
+
+	emoide.addServerCommand("CE4", (message) => {
+		e4_statusbar.text = "$(watch)E4";
+		if (message == FAIL_STR) {
+			e4_connected = false;
+			e4_statusbar.color = undefined;
+			displayMessage(
+				"Could not connect to E4, check the E4 "+
+				"manager app and port.")
+		} else {
+			e4_connected = true;
+			e4_statusbar.color = "#42f551";
+			emoide.activateActions()
 		}
-	}
+	});
 
-	function servername_to_name(s_name){
-		let name = "";
-		switch (s_name)
-		{
-			case "SRVY":
-				name = "survey";
-				break;
-			case "ESTM":
-				name = "estimate";
-				break;
-			case "BRK" :
-				name = "takeBreak";
-				break;
-			case "STUCK":
-				name = "stuck";
-				break;
+	emoide.addServerCommand("DE4", (message) => {
+		e4_connected = false;
+		e4_statusbar.text = "$(watch)E4";
+		e4_statusbar.color = undefined;
+		displayMessage("E4 disconnected.");
+	});
+
+	emoide.addServerCommand("SBL", (message) => {
+		if (message == "SUCC"){
+			displayMessage("Baseline set, ready for development.");
 		}
-		return name;
-	}
-
-
-	function handle_data(data){
-		let message = data.toString();
-		console.log(message);
-		let sep = message.search(" ");
-		let cmd = message.substring(0, sep);
-		switch (cmd){
-			case "ACT":
-				handle_actions(message.substring(sep+1, message.length));
-				break;
-			case "CE4":
-				message = message.substring(sep+1, message.length);
-				e4_statusbar.text = "$(watch)E4";
-				if (message == FAIL_STR)
-					displayMessage(
-						"Could not connect to E4, check the E4 "+
-						"manager app and port.")
-					else {
-						e4_connected = true;
-						e4_statusbar.color = "#42f551";
-						client.write(to_msg(get_active_actions()));
-					}
-				break;
-			case "DE4":
-				e4_connected = false;
-				e4_statusbar.text = "$(watch)E4";
-				e4_statusbar.color = undefined;
-				displayMessage("E4 disconnected.");
-				break;
-			case "SBL":
-				let sbl_data = message.split(' ');
-				if (sbl_data[1] == "SUCC")
-					displayMessage("Baseline set, ready for development.");
-				else {
-					displayMessage("New Baseline needs to be created.")
-				}
-				break;
-			case "ONEY":
-				let oney_str = message.substring(sep+1, message.length);
-				eye_statusbar.text = "$(eye)EYE";
-				if (oney_str == FAIL_STR)
-					displayMessage(
-						"Could not connect to Eyetracker. Make sure "+
-						"GazePoint control is active or the port in "+
-						"settings corresponds to the correct port.");
-				else {
-					eye_connected = true;
-					eye_statusbar.color = "#42f551";
-					client.write(to_msg(get_active_actions()));	
-				}
-				break;
-			case "OFEY":
-				eye_statusbar.text = "$(eye)EYE";
-				eye_connected = false;
-				eye_statusbar.color = undefined;
-				displayMessage("Eyetracker disconnected.");
-				break;
-			case "DACT":
-				let dact_str = message.substring(sep+1, message.length);
-				let dact_cmd = dact_str.split(" ");
-				if (dact_cmd[0] == "FAIL")
-				{
-					for (let i = 1; i < dact_cmd.length; i++)
-					{
-						let name = servername_to_name(dact_cmd[i]);
-						console.log(`actions.${name}`)
-						vscode.workspace.getConfiguration("emotionawareide").update(`actions.${name}`, false);
-					}
-					displayMessage("Could not activate all desired actions.");
-				}
-				break;
-			case "ERR":
-				displayMessage(message);
-				break;
+		else {
+			displayMessage("New Baseline needs to be created.")
 		}
-	}
+	});
+
+	emoide.addServerCommand("ONEY", (message) => {
+		eye_statusbar.text = "$(eye)EYE";
+		if (message == FAIL_STR) {
+			eye_connected = false;
+			eye_statusbar.color = undefined;
+			displayMessage(
+				"Could not connect to Eyetracker. Make sure "+
+				"GazePoint control is active or the port in "+
+				"settings corresponds to the correct port.");
+		} else {
+			eye_connected = true;
+			eye_statusbar.color = "#42f551";
+			emoide.activateActions();
+		}
+	});
+
+	emoide.addServerCommand("OFEY", (message) => {
+		eye_statusbar.text = "$(eye)EYE";
+		eye_connected = false;
+		eye_statusbar.color = undefined;
+		displayMessage("Eyetracker disconnected.");
+	});
   
 	// context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.start_survey', start_survey));
 
+	/*
+
+		Status bar items
+
+	*/
 
 	vscode.commands.registerCommand("show_web_view", show_web_view);
 	statusbar_item = vscode.window.createStatusBarItem(1, 1);
@@ -293,7 +258,6 @@ function activate(context) {
 
 
 	function e4_connection () {
-		console.log(e4_connected);
 		if (e4_connected == false) {
 			e4_statusbar.text = "$(watch)$(sync~spin)"
 			connect_e4();
@@ -304,6 +268,7 @@ function activate(context) {
 	vscode.commands.registerCommand("e4_connection", e4_connection);
 	e4_statusbar = vscode.window.createStatusBarItem(1,1);
 	e4_statusbar.command = "e4_connection";
+	e4_statusbar.tooltip = "\n\n\n\n";
 	e4_statusbar.text = "$(watch)E4";
 	e4_statusbar.show();
 
@@ -321,82 +286,120 @@ function activate(context) {
 	eye_statusbar.text = "$(eye)EYE";
 	eye_statusbar.show();
 
-	// port used for communication
-	const port1 = vscode.workspace.getConfiguration('emotionawareide').get('server.port');
-	console.log(port1);
+	/*
+		-------------------------------------------------
+		  Events which triggers upon change in settings
+		-------------------------------------------------
+		 If an action the server name for the action is 
+		          required after the function 
+	*/
 
-	// initialize client
-	// var client = new net.Socket();
+	emoide.addSettingEvent("server.port", (port) => {
+		console.log(`Connecting to ${port}`);
+		connect_to_server();
+	});
 
-	// // connect client
-	// client.connect(port1, '127.0.0.1', () => {
-	// 	console.log('Connected');
-	// });
+	emoide.addSettingEvent("e4.port", (port) => {
+		if (server_connected)
+			e4_connection();
+	});
 
-	// // on data received run function
-	// client.on('data', (data) => {
-	// 		handle_data(data);
-	// });
+	emoide.addSettingEvent("eye.port", (port) => {
+		if (server_connected)
+			eye_connection();
+	});
 
-	function get_active_actions() {
-		let activate_str = "AACT";
-		if (vscode.workspace.getConfiguration("emotionawareide").get("action.survey"))
-			activate_str += " SRVY";
-		if (vscode.workspace.getConfiguration("emotionawareide").get("action.takeBreak"))
-			activate_str += " BRK";
-		if (vscode.workspace.getConfiguration("emotionawareide").get("action.estimate"))
-			activate_str += " ESTM";
-		if (vscode.workspace.getConfiguration("emotionawareide").get("action.stuck"))
-			activate_str += " STUCK";
-		return activate_str;
-	}
-
-	vscode.workspace.onDidChangeConfiguration((e) => {
-		if (e.affectsConfiguration("emotionawareide.server.port")) {
-			console.log(`Connecting ${client.connecting}`);
-		} 
+	emoide.addActivationEvent("action.survey.activate", (active) => {
 		if (!server_connected)
 			return;
 
-		if (e.affectsConfiguration("emotionawareide.e4.port")) {
-				connect_e4();
+		let server_msg = "DACT SRVY";
+		if (active){
+			server_msg = "AACT SRVY";
 		}
-		else if (e.affectsConfiguration("emotionawareide.eye.port")) {
-				connect_eyetracker();
+		client.write(to_msg(server_msg));
+	});
+
+	emoide.addEditEvent("action.survey.time", (time) => {		
+		if (!server_connected) {
+			return;
 		}
-		else if (e.affectsConfiguration("emotionawareide.action.survey")) {
-			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.survey");
-			let server_msg = "DACT SRVY";
-			if (toggled){
-				server_msg = "AACT SRVY";
-			}
-			client.write(to_msg(server_msg));
+
+		let time_seconds = time*60;
+		let server_msg = `EACT SRVY TIME ${time_seconds}`;
+		client.write(to_msg(server_msg));
+	});
+
+	emoide.addActivationEvent("action.estimate.activate", (active) => {
+		if (!server_connected)
+			return;
+		
+		let server_msg = "DACT ESTM";
+		if (active){
+			server_msg = "AACT ESTM";
 		}
-		else if (e.affectsConfiguration("emotionawareide.action.estimate")) {
-			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.estimate");
-			let server_msg = "DACT ESTM";
-			if (toggled){
-				server_msg = "AACT ESTM";
-			}
-			client.write(to_msg(server_msg));
+		client.write(to_msg(server_msg));
+	});
+
+	emoide.addActivationEvent("action.takeBreak.activate", (active) => {
+		if (!server_connected)
+			return;
+		
+		let server_msg = "DACT BRK";
+		if (active){
+			server_msg = "AACT BRK";
 		}
-		else if (e.affectsConfiguration("emotionawareide.action.takeBreak")) {
-			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.takeBreak");
-			let server_msg = "DACT BRK";
-			if (toggled){
-				server_msg = "AACT BRK";
-			}
-			client.write(to_msg(server_msg));
+		client.write(to_msg(server_msg));
+	});
+
+	emoide.addEditEvent("action.takeBreak.time", (time) => {
+		if (!server_connected)
+			return;
+		
+		let time_seconds = time*60;
+		let server_msg = `EACT BRK TIME ${time_seconds}`;
+		client.write(to_msg(server_msg))
+	});
+
+	emoide.addEditEvent("action.takeBreak.mood", (emoji)=>{
+		if (!server_connected)
+			return;
+		
+		const emotion = emoji_to_emotion(emoji);
+		let server_msg = `EACT BRK EMO ${emotion}`;
+		client.write(to_msg(server_msg))
+	});
+
+	emoide.addEditEvent("action.takeBreak.certainty", (percent) => {
+		if (!server_connected)
+			return;
+		
+		let decimal_form = percent / 100;
+		let server_msg = `EACT BRK CERT ${decimal_form}`;
+		client.write(to_msg(server_msg));
+	})
+
+	emoide.addActivationEvent("action.stuck.activate", (active) => {
+		if (!server_connected)
+			return;
+		
+		let server_msg = "DACT STUCK";
+		if (active){
+			server_msg = "AACT STUCK";
 		}
-		else if (e.affectsConfiguration("emotionawareide.action.stuck")) {
-			let toggled = vscode.workspace.getConfiguration("emotionawareide").get("action.stuck");
-			let server_msg = "DACT STUCK";
-			if (toggled){
-				server_msg = "AACT STUCK";
-			}
-			client.write(to_msg(server_msg));
-		}
-			
+		client.write(to_msg(server_msg));
+	});
+
+	emoide.addEditEvent("action.stuck.time", (time) => {
+		if (!server_connected)
+			return;
+		let server_msg = `EACT STUCK TIME ${time}`;
+		client.write(to_msg(server_msg));
+	});
+
+
+	vscode.workspace.onDidChangeConfiguration((e) => {
+		emoide.onSettingChange(e);
 	});
 
 }
@@ -498,59 +501,6 @@ function getWebviewContent() {
 	  
 	</html>`;
 }
-
-
-function convert_message(data) {
-	let str = "";
-	//str += "FPOGX: " + String(byteToFloat(data.slice(0,4)));
-	//str += ", FPOGY: " + String(byteToFloat(data.slice(4,8)));
-	let arousal = "LOW";
-	if (data[8] == 1)
-	{
-		arousal = "HIGH";
-	}
-	str += "Arousal: " + arousal + ", Certanty: " + String(byteToFloat(data.slice(9,13)));
-	str += "\n"
-	let valence = "LOW";
-	if (data[13] == 1)
-	{
-		valence = "HIGH";
-	}
-	str += "Valence: " + valence + ", Certanty: " + String(byteToFloat(data.slice(14, 18)));
-	return str;
-}
-function getVisibleText() {
-    // finds top and bottom lines currently visible on texteditor
-
-    visRanges = vscode.window.activeTextEditor.visibleRanges;
-    low = visRanges[0]["_start"]["_line"]
-    high = visRanges[0]["_end"]["_line"]
-    console.log("Current top line " + low);
-    console.log("Current bottom line " + high);
-    const range = new vscode.Range(low, 0, high, 0);
-    const ranges = vscode.window.activeTextEditor.document.getText(range)
-    const stuckText = vscode.window.activeTextEditor.document.fileName;
-    vscode.window.showInformationMessage(stuckText,ranges);
-}
-
-
-function byteToFloat(data) {
-    // Create a buffer
-    let buf = new ArrayBuffer(4);
-    // Create a data view of it
-    let view = new DataView(buf);
-
-    // set bytes
-    data.forEach(function (b, i) {
-       view.setUint8(i, b);
-    });
-
-    // Read the bits as a float; note that by doing this, we're implicitly
-    // converting it from a 32-bit float into JavaScript's native 64-bit double
-    let num = view.getFloat32(0, true);
-    return num;
-}
-
 
 // this method is called when your extension is deactivated
 function deactivate() {
