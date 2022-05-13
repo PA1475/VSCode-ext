@@ -106,7 +106,7 @@
 							"Take a break when im in the 😰😞 moods."
 						]
 					},
-					"emotionawareide.action.stuck" : {
+					"emotionawareide.action.stuck.activate" : {
 						"type" : "boolean",
 						"default" : false,
 						"description": "Notifies the user when they have gotten stuck on a piece of code."

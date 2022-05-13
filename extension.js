@@ -243,11 +243,6 @@ function activate(context) {
   
 	// context.subscriptions.push(vscode.commands.registerCommand('emotionawareide.start_survey', start_survey));
 
-	/*
-
-		Status bar items
-
-	*/
 
 	vscode.commands.registerCommand("show_web_view", show_web_view);
 	statusbar_item = vscode.window.createStatusBarItem(1, 1);
@@ -282,6 +277,7 @@ function activate(context) {
 	eye_statusbar = vscode.window.createStatusBarItem(1,1);
 	eye_statusbar.command = "eye_connection";
 	eye_statusbar.text = "$(eye)EYE";
+	eye_statusbar.tooltip = "Tjabba";
 	eye_statusbar.show();
 
 	/*
