@@ -239,12 +239,16 @@ function activate(context) {
 	});
 
 	emoide.addActionCommand("BRK", async (message) => {
-		displayMessage("You might need a break ☕");
+		displayMessage("You might need to take a break ☕");
+	});
+
+	emoide.addActionCommand("CSTM", (message) => {
+		displayMessage("There is a problem with the E4 server, try restarting the E4 streaming App.");
 	});
 
 	emoide.addServerCommand("ERR", (message) => {
 		displayMessage(message);
-	})
+	});
 
 	emoide.addServerCommand("CE4", (message) => {
 		e4_statusbar.text = "$(watch)E4";
@@ -280,6 +284,10 @@ function activate(context) {
 		e4_connected = false;
 		e4_statusbar.text = "$(watch)E4";
 		e4_statusbar.color = undefined;
+		let parts = message.split(' ');
+		if (parts[1] == "LOST") {
+			displayMessage("Lost connection to E4.");
+		}
 	});
 
 	emoide.addServerCommand("SBL", (message) => {
@@ -405,17 +413,6 @@ function activate(context) {
 		let server_msg = `EACT SRVY TIME ${time_seconds}`;
 		client.write(to_msg(server_msg));
 	});
-
-	// emoide.addActivationEvent("action.estimate.activate", (active) => {
-	// 	if (!server_connected)
-	// 		return;
-		
-	// 	let server_msg = "DACT ESTM";
-	// 	if (active){
-	// 		server_msg = "AACT ESTM";
-	// 	}
-	// 	client.write(to_msg(server_msg));
-	// });
 
 	emoide.addActivationEvent("action.takeBreak.activate", (active) => {
 		if (!server_connected)
