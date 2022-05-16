@@ -59,7 +59,7 @@
 				"properties": {
 					"emotionawareide.e4.port" : {
 						"type": "integer",
-						"default": 8080,
+						"default": 28000,
 						"minimum": 1000,
 						"description": "The port used for transmission of E4 data."
 					}
@@ -89,11 +89,6 @@
 						"default" : 5,
 						"minimum": 1,
 						"description": "How often should the survey be polled. (minutes)"
-					},
-					"emotionawareide.action.estimate.activate" : {
-						"type" : "boolean",
-						"default" : false,
-						"description": "Estimates the users mood during the session."
 					},
 					"emotionawareide.action.takeBreak.activate" : {
 						"type" : "boolean",

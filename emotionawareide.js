@@ -80,7 +80,8 @@ class EmotionAwareIDE {
 			this.handleAction(message.substring(sep+1, message.length));
 		
 		} else if (cmd in this.server_commands){
-			this.server_commands[cmd](message.substring(sep+1, message.length));
+			let temp = message.substring(sep+1, message.length);
+			this.server_commands[cmd](temp);
 		}
 	}
 
