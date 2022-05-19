@@ -50,6 +50,16 @@
 						"default": 1337,
 						"minimum": 1000,
 						"description": "The port used for receiving data."
+					},
+					"emotionawareide.server.retrainAi" : {
+						"type" : "boolean",
+						"default" : false,
+						"description" : "Retrain the AI with new data after the extension closes"
+					},
+					"emotionawareide.server.autoSaveAiTraining" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Auto save the new trained AI model."
 					}
 				}
 			},

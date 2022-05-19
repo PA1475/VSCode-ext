@@ -235,12 +235,13 @@ function activate(context) {
 		let data_arr = message.split(" ");
 		let pred_index = parseInt(data_arr[0]);
 		let pred_certainty = data_arr[1];
-		update_statusbar_label(emotion_to_emoji(pred_index));
+		update_statusbar_label(`${emotion_to_emoji(pred_index)} ${pred_certainty}%`);
 	});
 
 	emoide.addActionCommand("BRK", async (message) => {
 		displayMessage("You might need to take a break ☕");
 	});
+
 
 	emoide.addActionCommand("CSTM", (message) => {
 		displayMessage("There is a problem with the E4 server, try restarting the E4 streaming App.");
@@ -403,6 +404,7 @@ function activate(context) {
 		}
 		client.write(to_msg(server_msg));
 	});
+	
 
 	emoide.addEditEvent("action.survey.time", (time) => {		
 		if (!server_connected) {
@@ -452,6 +454,22 @@ function activate(context) {
 		client.write(to_msg(server_msg));
 	})
 
+	emoide.addEditEvent("server.retrainAi", (active) => {
+		if (!server_connected)
+			return;
+		
+		msg = `RTAI ${active}`;
+		client.write(to_msg(msg));
+	});
+
+	emoide.addEditEvent("server.autoSaveAiTraining", (active) => {
+		if (!server_connected)
+			return;
+
+		msg = `ASAI ${active}`;
+		client.write(to_msg(msg));
+	})
+
 	emoide.addActivationEvent("action.stuck.activate", (active) => {
 		if (!server_connected)
 			return;
@@ -469,6 +487,8 @@ function activate(context) {
 		let server_msg = `EACT STUCK TIME ${time}`;
 		client.write(to_msg(server_msg));
 	});
+
+	
 
 
 	vscode.workspace.onDidChangeConfiguration((e) => {
