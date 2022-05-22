@@ -1,0 +1,173 @@
+{
+	"name": "emotionawareide",
+	"displayName": "EmotionAwareIDE",
+	"description": "Predicts user mood and gives tips based on input from some equipment",
+	"version": "0.0.1",
+	"engines": {
+		"vscode": "^1.64.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"*"
+	],
+	"main": "./extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "emotionawareide.start_dashboard",
+				"title": "Show Dashboard"
+			},
+			{
+				"command": "emotionawareide.show_message",
+				"title": "Show message"
+			},
+			{
+				"command": "emotionawareide.connect_eyetracker",
+				"title": "Connect Eyetracker"
+			},
+			{
+				"command": "emotionawareide.connect_server",
+				"title": "Connect Server"
+			},
+			{
+				"command":"emotionawareide.test_communication",
+				"title": "Message Client"
+			}
+		],
+		"configuration": [
+			{
+				"id" : "EmotionAwareIDE",
+				"title": "EmotionAwareIDE"
+			},
+			{
+				"title" : "Server",
+				"properties": {
+					"emotionawareide.server.port": {
+						"order" : 2,
+						"type": "integer",
+						"default": 1337,
+						"minimum": 1000,
+						"description": "The port used for receiving data."
+					},
+					"emotionawareide.server.retrainAi" : {
+						"type" : "boolean",
+						"default" : false,
+						"description" : "Retrain the AI with new data after the extension closes"
+					},
+					"emotionawareide.server.autoSaveAiTraining" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Auto save the new trained AI model."
+					}
+				}
+			},
+			{
+				"title":"E4",
+				"description" : "Description",
+				"properties": {
+					"emotionawareide.e4.port" : {
+						"type": "integer",
+						"default": 28000,
+						"minimum": 1000,
+						"description": "The port used for transmission of E4 data."
+					}
+				}
+			},
+			{
+				"title":"Eye Tracker",
+				"properties": {
+					"emotionawareide.eye.port" : {
+						"type": "integer",
+						"default": 4242,
+						"minimum": 1000,
+						"description": "The port used for transmission of Eyetracker data."
+					}
+				}
+			},
+			{
+				"title" : "Actions",
+				"properties": {
+					"emotionawareide.action.survey.activate" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Poll the user for mood, this data will be used to train the AI."
+					},
+					"emotionawareide.action.survey.time" : {
+						"type" : "integer",
+						"default" : 5,
+						"minimum": 0,
+						"description": "How often should the survey be polled. (minutes)"
+					},
+					"emotionawareide.action.takeBreak.activate" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Notifies the user when to take a break (Check box to activate)."
+					},
+					"emotionawareide.action.takeBreak.time" : {
+						"type" : "number",
+						"default" : 20,
+						"minimum": 1,
+						"description": "The amount of time, being in a certain mood, before the IDE tells you to take a break. (minutes)"
+					},
+					"emotionawareide.action.takeBreak.mood" : {
+						"type" : "string",
+						"default" : "😰",
+						"enum" : ["😰","😞"],
+						"enumDescriptions": [
+							"Take a break when im in the 😰 mood.",
+							"Take a break when im in the 😞 mood."
+						]
+					},
+					"emotionawareide.action.takeBreak.certainty" : {
+						"type" : "integer",
+						"default" : 70,
+						"minimum": 1,
+						"maximum": 100,
+						"description": "What certainty is required for the take a break action to notify the IDE. (Percentage)"
+
+
+					},
+					"emotionawareide.action.stuck.activate" : {
+						"type" : "boolean",
+						"default" : false,
+						"description": "Notifies the user when they have gotten stuck on a piece of code."
+					},
+					"emotionawareide.action.stuck.time" : {
+						"type" : "integer",
+						"default" : 20,
+						"minimum": 10,
+						"description": "For how long the user is stuck in one place before activating. (seconds)"
+					}
+					
+				}
+			}
+		]
+	},
+	"imports" : {
+		"#dep": {
+			"node": "emotionawareide",
+			"default": "./emotionawareide.js"
+			}
+	},
+	"dependencies": {
+		"emotionawareide": "^1.0.0"
+	},
+	"scripts": {
+		"lint": "eslint .",
+		"pretest": "npm run lint",
+		"test": "node ./test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.2.0",
+		"@types/mocha": "^9.1.0",
+		"@types/node": "14.x",
+		"@types/vscode": "^1.64.0",
+		"@vscode/test-electron": "^2.1.2",
+		"eslint": "^8.9.0",
+		"glob": "^7.2.0",
+		"mocha": "^9.2.1",
+		"typescript": "^4.5.5"
+	}
+}
